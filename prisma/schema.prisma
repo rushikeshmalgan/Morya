@@ -1,0 +1,264 @@
+// Bappa Mode - Prisma Schema
+// Database: SQLite (dev) / PostgreSQL (prod)
+// Connection config is in prisma.config.ts (Prisma 7+)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────
+
+model AnonymousUser {
+  id              String   @id @default(cuid())
+  deviceId        String   @unique // client UUID (registration only, not authoritative)
+  sessionToken    String   @unique // server-issued, used for all authenticated ops
+  generatedName   String   // e.g. "Dhol Tasha Warrior"
+  generatedNumber Int      // e.g. 4821
+  city            String?
+  cityLat         Float?
+  cityLng         Float?
+  score           Int      @default(0)
+  uniquePandals   Int      @default(0) // denormalized count for leaderboard perf
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  visits           PandalVisit[]
+  photos           Photo[]
+  userQuests       UserQuest[]
+  achievements     UserAchievement[]
+  squadMemberships SquadMember[]
+  photoVotes       PhotoVote[]
+  createdSquads    Squad[]           @relation("SquadCreator")
+
+  @@map("anonymous_users")
+}
+
+// ─────────────────────────────────────────────
+// PANDALS
+// ─────────────────────────────────────────────
+
+model Pandal {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  latitude    Float
+  longitude   Float
+  address     String?
+  city        String
+  aartiTimes  String?      // JSON array: ["06:00", "12:00", "20:00"]
+  established Int?         // year
+  status      PandalStatus @default(APPROVED)
+  submittedBy String?      // userId of contributor (null = seeded)
+  isNew       Boolean      @default(false) // newly submitted, special marker
+  isRare      Boolean      @default(false) // special/famous pandal
+
+  visits PandalVisit[]
+  photos Photo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pandals")
+}
+
+enum PandalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────
+// VISITS / DISCOVERIES
+// ─────────────────────────────────────────────
+
+model PandalVisit {
+  id                 String             @id @default(cuid())
+  userId             String
+  pandalId           String
+  latitude           Float              // user GPS at time of visit (server captured)
+  longitude          Float
+  timestamp          DateTime           @default(now()) // server time, never client
+  verificationStatus VerificationStatus @default(VERIFIED)
+  photoId            String?            // linked photo
+
+  user   AnonymousUser @relation(fields: [userId], references: [id])
+  pandal Pandal        @relation(fields: [pandalId], references: [id])
+
+  // HARD RULE: one unique discovery per pandal per user
+  @@unique([userId, pandalId])
+  @@map("pandal_visits")
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+// ─────────────────────────────────────────────
+// PHOTOS
+// ─────────────────────────────────────────────
+
+model Photo {
+  id               String           @id @default(cuid())
+  userId           String
+  pandalId         String
+  imageUrl         String           // path or CDN URL — NEVER Base64
+  latitude         Float?
+  longitude        Float?
+  timestamp        DateTime         @default(now())
+  isFeatured       Boolean          @default(false)
+  isPhotoOfDay     Boolean          @default(false)
+  likeCount        Int              @default(0)
+  moderationStatus ModerationStatus @default(PENDING)
+  category         PhotoCategory    @default(BEST_BAPPA)
+  caption          String?
+
+  user   AnonymousUser @relation(fields: [userId], references: [id])
+  pandal Pandal        @relation(fields: [pandalId], references: [id])
+  votes  PhotoVote[]
+
+  createdAt DateTime @default(now())
+
+  @@map("photos")
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PhotoCategory {
+  BEST_BAPPA
+  BEST_DECORATION
+  BEST_VIBE
+  NIGHT_DARSHAN
+  BEST_SHOT
+  COMMUNITY_FAVOURITE
+}
+
+// ─────────────────────────────────────────────
+// PHOTO VOTES
+// ─────────────────────────────────────────────
+
+model PhotoVote {
+  userId  String
+  photoId String
+  votedAt DateTime @default(now())
+
+  user  AnonymousUser @relation(fields: [userId], references: [id])
+  photo Photo         @relation(fields: [photoId], references: [id])
+
+  // one vote per user per photo
+  @@id([userId, photoId])
+  @@map("photo_votes")
+}
+
+// ─────────────────────────────────────────────
+// QUESTS
+// ─────────────────────────────────────────────
+
+model Quest {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  type        QuestType
+  requirement Int       // e.g. 5 for "find 5 pandals"
+  reward      Int       // score points awarded on completion
+  activeFrom  DateTime
+  activeUntil DateTime
+  isActive    Boolean   @default(true)
+
+  userQuests UserQuest[]
+
+  @@map("quests")
+}
+
+enum QuestType {
+  DISCOVER_N
+  VISIT_SPECIFIC
+  FIND_UNKNOWN
+  NIGHT_DARSHAN
+  AREA_CHALLENGE
+  PHOTO_SUBMIT
+}
+
+model UserQuest {
+  userId      String
+  questId     String
+  progress    Int      @default(0)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+
+  user  AnonymousUser @relation(fields: [userId], references: [id])
+  quest Quest         @relation(fields: [questId], references: [id])
+
+  @@id([userId, questId])
+  @@map("user_quests")
+}
+
+// ─────────────────────────────────────────────
+// SQUADS
+// ─────────────────────────────────────────────
+
+model Squad {
+  id        String   @id @default(cuid())
+  code      String   @unique // e.g. "MORYA-7X42"
+  name      String?
+  createdBy String
+  createdAt DateTime @default(now())
+
+  creator AnonymousUser @relation("SquadCreator", fields: [createdBy], references: [id])
+  members SquadMember[]
+
+  @@map("squads")
+}
+
+model SquadMember {
+  squadId  String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  squad Squad         @relation(fields: [squadId], references: [id])
+  user  AnonymousUser @relation(fields: [userId], references: [id])
+
+  @@id([squadId, userId])
+  @@map("squad_members")
+}
+
+// ─────────────────────────────────────────────
+// ACHIEVEMENTS
+// ─────────────────────────────────────────────
+
+model Achievement {
+  id          String  @id @default(cuid())
+  key         String  @unique // e.g. "first_darshan"
+  name        String  // "First Darshan"
+  description String
+  icon        String  // emoji or icon name
+  threshold   Int?    // for count-based achievements
+  points      Int     @default(0)
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        AnonymousUser @relation(fields: [userId], references: [id])
+  achievement Achievement   @relation(fields: [achievementId], references: [id])
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}

@@ -1,0 +1,588 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────
+   BAPPA MODE — Design System
+   Traditional Indian Premium + Modern Mobile
+   ───────────────────────────────────────────── */
+
+/* ── COLOR TOKENS ── */
+:root {
+  --saffron: #FF6B00;
+  --saffron-light: #FF8C33;
+  --saffron-dark: #CC5500;
+  --vermillion: #CC2200;
+  --deep-red: #8B1A1A;
+  --warm-cream: #FFF8E7;
+  --warm-cream-dark: #F5EDCF;
+  --muted-gold: #C9933A;
+  --muted-gold-light: #E8BE6A;
+  --muted-gold-dark: #9A6E1A;
+  --terracotta: #C65D3A;
+  --charcoal: #1A1410;
+  --charcoal-mid: #2D2218;
+  --charcoal-light: #4A3728;
+  --deep-green: #1A3A2A;
+  --soft-white: #FFFDF7;
+  --fog-gray: #8A7A6A;
+
+  /* Backgrounds */
+  --bg-primary: #0F0B08;
+  --bg-card: #1C1410;
+  --bg-card-hover: #251B14;
+  --bg-surface: #231912;
+  --bg-glass: rgba(255, 248, 231, 0.06);
+  --bg-glass-hover: rgba(255, 248, 231, 0.1);
+
+  /* Borders */
+  --border-gold: rgba(201, 147, 58, 0.3);
+  --border-gold-bright: rgba(201, 147, 58, 0.6);
+  --border-cream: rgba(255, 248, 231, 0.1);
+
+  /* Shadows */
+  --shadow-saffron: 0 0 20px rgba(255, 107, 0, 0.3);
+  --shadow-gold: 0 0 15px rgba(201, 147, 58, 0.2);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+  /* Checkin radius display */
+  --checkin-radius: 150;
+}
+
+/* ── BASE ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--warm-cream);
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── TYPOGRAPHY ── */
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--muted-gold-light), var(--muted-gold), var(--saffron));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-saffron {
+  background: linear-gradient(135deg, var(--saffron-light), var(--saffron));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── MANDALA BACKGROUND PATTERN ── */
+.mandala-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(201, 147, 58, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse at 100% 100%, rgba(255, 107, 0, 0.06) 0%, transparent 60%);
+}
+
+.mandala-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.mandala-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9933A' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── CARDS ── */
+.bappa-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.bappa-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-gold-bright);
+  box-shadow: var(--shadow-gold);
+}
+
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-cream);
+  border-radius: 16px;
+}
+
+/* ── BUTTONS ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--saffron), var(--saffron-dark));
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(255, 107, 0, 0.35);
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(255, 107, 0, 0.5);
+  background: linear-gradient(135deg, var(--saffron-light), var(--saffron));
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 26px;
+  background: transparent;
+  color: var(--muted-gold-light);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border: 1.5px solid var(--border-gold-bright);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-glass);
+  border-color: var(--muted-gold);
+  color: var(--muted-gold);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  color: var(--warm-cream);
+  opacity: 0.7;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-ghost:hover {
+  opacity: 1;
+  background: var(--bg-glass);
+}
+
+/* ── GOLD DIVIDER ── */
+.gold-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--muted-gold), transparent);
+  margin: 0 auto;
+}
+
+/* ── BAPPA SCORE CHIP ── */
+.score-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(201, 147, 58, 0.15), rgba(201, 147, 58, 0.08));
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted-gold-light);
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(15, 11, 8, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-gold);
+  padding: 8px 0;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--fog-gray);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  background: none;
+}
+
+.bottom-nav-item.active {
+  color: var(--saffron);
+}
+
+.bottom-nav-item:hover {
+  color: var(--warm-cream);
+}
+
+.bottom-nav-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+/* ── BOTTOM SHEET ── */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-gold);
+  border-radius: 24px 24px 0 0;
+  padding: 12px 24px 32px;
+  padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border-gold);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+/* ── MAP SPECIFIC ── */
+.map-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Override Leaflet for Bappa styling */
+.leaflet-container {
+  background: #1A1008 !important;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom tile layer opacity for dark mode map */
+.leaflet-tile {
+  filter: brightness(0.6) saturate(0.5) sepia(0.2) hue-rotate(10deg);
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-gold) !important;
+  border-radius: 12px !important;
+  color: var(--warm-cream) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-surface) !important;
+}
+
+/* ── MAP OVERLAY UI ── */
+.map-overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.map-overlay > * {
+  pointer-events: auto;
+}
+
+/* ── PANDAL MARKER STATES ── */
+.bappa-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+
+.bappa-marker:hover {
+  transform: scale(1.15);
+}
+
+/* ── DISCOVERY ANIMATION ── */
+@keyframes bappa-unlock {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--saffron);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--muted-gold) 0%,
+    var(--muted-gold-light) 40%,
+    var(--warm-cream) 50%,
+    var(--muted-gold-light) 60%,
+    var(--muted-gold) 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── DISCOVERY STATE COLORS ── */
+.state-detected { color: var(--fog-gray); }
+.state-revealed { color: var(--muted-gold); }
+.state-in-range { color: var(--saffron); }
+.state-discovered { color: #4ADE80; }
+
+/* ── ACHIEVEMENT BADGE ── */
+.achievement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(201, 147, 58, 0.15), rgba(255, 107, 0, 0.1));
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+
+/* ── QUEST CARD ── */
+.quest-card {
+  background: linear-gradient(135deg, var(--bg-card), rgba(201, 147, 58, 0.08));
+  border: 1px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.quest-progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.quest-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--saffron), var(--muted-gold));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* ── LEADERBOARD ── */
+.rank-1 { color: #FFD700; }
+.rank-2 { color: #C0C0C0; }
+.rank-3 { color: #CD7F32; }
+
+/* ── PHOTO GRID ── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.photo-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.photo-card:hover img {
+  transform: scale(1.05);
+}
+
+/* ── COLLECTION CARD ── */
+.collection-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.collection-card.discovered {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* ── DEMO MODE BANNER ── */
+.demo-banner {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(201, 147, 58, 0.2));
+  border: 1px solid rgba(255, 107, 0, 0.4);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--saffron);
+}
+
+/* ── SAFE AREA / MOBILE ── */
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── LOADING SKELETON ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 0%,
+    var(--bg-card-hover) 50%,
+    var(--bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ── INPUT ── */
+.bappa-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  color: var(--warm-cream);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.bappa-input:focus {
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15);
+}
+
+.bappa-input::placeholder {
+  color: var(--fog-gray);
+}
+
+/* ── TAG / PILL ── */
+.bappa-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255, 107, 0, 0.1);
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--saffron-light);
+}
+
+/* ── CONFETTI COLORS ── */
+.confetti-saffron { color: var(--saffron); }
+.confetti-gold { color: var(--muted-gold-light); }
+.confetti-cream { color: var(--warm-cream); }

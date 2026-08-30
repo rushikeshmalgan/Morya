@@ -83,6 +83,8 @@ export default function MapPage() {
   const [checkinRadius, setCheckinRadius] = useState(150);
   const [isDemo, setIsDemo] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [recenterKey, setRecenterKey] = useState(0);
+  const [isLocating, setIsLocating] = useState(false);
   const [flow, setFlow] = useState<FlowStep>({ phase: "map" });
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [_pendingPhotoPreview, setPendingPhotoPreview] = useState<string>("");
@@ -94,6 +96,31 @@ export default function MapPage() {
 
   // Demo location — Kasba Ganpati area, Pune
   const DEMO_LOCATION = { lat: 18.5196, lng: 73.8553 };
+
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    if (navigator.geolocation && !isDemo) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(newLoc);
+          setLocationDenied(false);
+          setRecenterKey((k) => k + 1);
+          fetchNearby(newLoc.lat, newLoc.lng);
+          setIsLocating(false);
+        },
+        () => {
+          // Fallback to current location and recenter
+          setRecenterKey((k) => k + 1);
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    } else {
+      setRecenterKey((k) => k + 1);
+      setTimeout(() => setIsLocating(false), 300);
+    }
+  };
 
   useEffect(() => {
     const stored = getStoredUser();
@@ -360,6 +387,7 @@ export default function MapPage() {
           onPandalTap={handlePandalTap}
           checkinRadius={checkinRadius}
           isDemoMode={isDemo}
+          recenterKey={recenterKey}
         />
       )}
 
@@ -419,7 +447,51 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* ── ADD PANDAAL FLOATING ACTION BUTTON ── */}
+      {/* ── GOOGLE MAPS STYLE LOCATE ME BUTTON ── */}
+      {flow.phase === "map" && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.35, type: "spring" }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={handleLocateMe}
+          disabled={isLocating}
+          className="fixed bottom-36 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all"
+          style={{
+            background: "#FFF9F1",
+            border: "1.5px solid rgba(216, 169, 74, 0.4)",
+            boxShadow: "0 6px 20px rgba(74, 48, 40, 0.15)",
+          }}
+          id="locate-me-btn"
+          title="Recenter on my location"
+        >
+          {isLocating ? (
+            <span className="inline-block animate-spin text-lg">⏳</span>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#E9784F"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="7" />
+              <polyline points="12 2 12 5" />
+              <polyline points="12 19 12 22" />
+              <polyline points="2 12 5 12" />
+              <polyline points="19 12 22 12" />
+              <circle cx="12" cy="12" r="2.5" fill="#E9784F" />
+            </svg>
+          )}
+        </motion.button>
+      )}
+
+      {/* ── ADD PANDAL FLOATING ACTION BUTTON ── */}
       {flow.phase === "map" && (
         <motion.button
           initial={{ scale: 0, opacity: 0 }}

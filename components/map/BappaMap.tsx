@@ -11,6 +11,7 @@ interface BappaMapProps {
   onPandalTap: (pandal: NearbyPandal) => void;
   checkinRadius: number;
   isDemoMode: boolean;
+  recenterKey?: number;
 }
 
 // Custom SVG markers with warm festival styling
@@ -125,6 +126,7 @@ export default function BappaMap({
   onPandalTap,
   checkinRadius,
   isDemoMode: _isDemoMode,
+  recenterKey,
 }: BappaMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -132,6 +134,15 @@ export default function BappaMap({
   const userMarkerRef = useRef<L.Marker | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
   const initialCenterSet = useRef(false);
+
+  // Smoothly fly to user location when recenterKey changes
+  useEffect(() => {
+    if (!recenterKey || !mapRef.current) return;
+    mapRef.current.flyTo([userLocation.lat, userLocation.lng], 16, {
+      animate: true,
+      duration: 1.2,
+    });
+  }, [recenterKey, userLocation]);
 
   // Initialize map
   useEffect(() => {

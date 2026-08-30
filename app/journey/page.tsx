@@ -29,11 +29,19 @@ interface Achievement {
   unlockedAt: string;
 }
 
+interface ScoreTx {
+  id: string;
+  eventType: string;
+  points: number;
+  createdAt: string;
+}
+
 export default function JourneyPage() {
   const [user, setUser] = useState<BappaUser | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [activeTab, setActiveTab] = useState<"pandals" | "achievements">("pandals");
+  const [scoreHistory, setScoreHistory] = useState<ScoreTx[]>([]);
+  const [activeTab, setActiveTab] = useState<"pandals" | "achievements" | "score">("pandals");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,14 +54,17 @@ export default function JourneyPage() {
   const fetchJourney = async (token: string) => {
     setIsLoading(true);
     try {
-      const [visitsRes, userRes] = await Promise.all([
+      const [visitsRes, userRes, scoreRes] = await Promise.all([
         fetch("/api/visits", { headers: { "x-session-token": token } }),
         fetch("/api/user", { headers: { "x-session-token": token } }),
+        fetch("/api/score", { headers: { "x-session-token": token } }),
       ]);
       const visitsData = await visitsRes.json();
       const userData = await userRes.json();
+      const scoreData = await scoreRes.json();
       setVisits(visitsData.visits || []);
       setAchievements(userData.achievements || []);
+      setScoreHistory(scoreData.history || []);
     } catch {
       // Error
     } finally {
@@ -180,6 +191,22 @@ export default function JourneyPage() {
           >
             🏆 BADGES ({achievements.length})
           </button>
+          <button
+            id="tab-score"
+            onClick={() => setActiveTab("score")}
+            className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+            style={
+              activeTab === "score"
+                ? {
+                    background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                    color: "#FFFFFF",
+                    boxShadow: "var(--shadow-primary)",
+                  }
+                : { color: "var(--muted-brown)" }
+            }
+          >
+            ✨ XP LEDGER ({scoreHistory.length})
+          </button>
         </div>
 
         {/* Content */}
@@ -209,14 +236,10 @@ export default function JourneyPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="collection-card discovered flex gap-3.5 p-3 items-center"
+                    className="bappa-card p-4 flex items-center gap-4"
                   >
-                    {/* Thumbnail */}
-                    <div
-                      className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden relative flex items-center justify-center"
-                      style={{ background: "#FFE8D2" }}
-                    >
-                      {visit.pandal.photos[0] ? (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden relative flex-shrink-0 bg-amber-100 flex items-center justify-center">
+                      {visit.pandal.photos[0]?.imageUrl ? (
                         <Image
                           src={visit.pandal.photos[0].imageUrl}
                           alt={visit.pandal.name}
@@ -225,23 +248,28 @@ export default function JourneyPage() {
                           unoptimized
                         />
                       ) : (
-                        <span className="text-3xl">🐘</span>
+                        <span className="text-2xl">🐘</span>
                       )}
                     </div>
-
-                    {/* Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <h4 className="font-bold text-sm truncate" style={{ color: "var(--warm-brown)" }}>
+                        <h3 className="font-bold text-sm truncate text-slate-800">
                           {visit.pandal.name}
-                        </h4>
-                        {visit.pandal.isRare && <span className="text-xs">⭐</span>}
+                        </h3>
+                        {visit.pandal.isRare && (
+                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1 rounded font-bold">RARE</span>
+                        )}
                       </div>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--muted-brown)" }}>
+                      <p className="text-xs text-slate-500 font-medium">
                         📍 {visit.pandal.city}
                       </p>
-                      <p className="text-[10px] mt-2 font-semibold" style={{ color: "var(--success)" }}>
-                        ✓ Discovered {new Date(visit.timestamp).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        {new Date(visit.timestamp).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </motion.div>
@@ -255,14 +283,12 @@ export default function JourneyPage() {
         {activeTab === "achievements" && (
           <div>
             {achievements.length === 0 ? (
-              <div className="text-center py-14 bappa-card p-6">
-                <div className="text-5xl mb-3">🏆</div>
-                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
-                  No Badges Unlocked Yet
-                </h3>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--muted-brown)" }}>
-                  Discover your first pandal or capture a moment to earn festival badges!
-                </p>
+              <div className="py-8">
+                <MushakEmptyState
+                  mood="thinking"
+                  title="No Badges Unlocked Yet"
+                  description="Discover your first Bappa to unlock your first exploration badge!"
+                />
               </div>
             ) : (
               <div className="space-y-3">
@@ -286,6 +312,53 @@ export default function JourneyPage() {
                     <div className="text-[10px] font-semibold" style={{ color: "var(--muted-brown)" }}>
                       {new Date(ua.unlockedAt).toLocaleDateString("en-IN")}
                     </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Score History Tab */}
+        {activeTab === "score" && (
+          <div>
+            {scoreHistory.length === 0 ? (
+              <div className="py-8">
+                <MushakEmptyState
+                  mood="thinking"
+                  title="No Score Transactions Yet"
+                  description="Start discovering pandals, completing quests, and uploading photos to populate your XP ledger!"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {scoreHistory.map((tx, i) => (
+                  <motion.div
+                    key={tx.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bappa-card p-3.5 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-amber-100/80 border border-amber-300 text-amber-700 flex items-center justify-center text-sm font-bold">
+                        +{tx.points}
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-slate-800 capitalize">
+                          {tx.eventType.replace(/_/g, " ").toLowerCase()}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {new Date(tx.createdAt).toLocaleString("en-IN", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                      +{tx.points} XP
+                    </span>
                   </motion.div>
                 ))}
               </div>

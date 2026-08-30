@@ -12,14 +12,12 @@ interface PhotoCaptureSheetProps {
 export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySelected }: PhotoCaptureSheetProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Check if camera is available
+  const [cameraError] = useState<string | null>(() => {
     if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera device not detected or permission denied");
+      return "Camera device not detected or permission denied";
     }
-  }, []);
+    return null;
+  });
 
   const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

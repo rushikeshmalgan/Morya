@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   if (type === "global") {
     const users = await prisma.anonymousUser.findMany({
-      orderBy: [{ uniquePandals: "desc" }, { score: "desc" }, { createdAt: "asc" }],
+      orderBy: [{ score: "desc" }, { uniquePandals: "desc" }, { createdAt: "asc" }],
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   if (type === "city" && city) {
     const users = await prisma.anonymousUser.findMany({
       where: { city: { equals: city } },
-      orderBy: [{ uniquePandals: "desc" }, { score: "desc" }, { createdAt: "asc" }],
+      orderBy: [{ score: "desc" }, { uniquePandals: "desc" }, { createdAt: "asc" }],
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-          orderBy: { user: { uniquePandals: "desc" } },
+          orderBy: { user: { score: "desc" } },
         },
       },
     });

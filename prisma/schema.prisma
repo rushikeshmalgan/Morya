@@ -35,6 +35,7 @@ model AnonymousUser {
   squadMemberships SquadMember[]
   photoVotes       PhotoVote[]
   createdSquads    Squad[]           @relation("SquadCreator")
+  scoreTransactions ScoreTransaction[]
 
   @@map("anonymous_users")
 }
@@ -261,4 +262,24 @@ model UserAchievement {
 
   @@id([userId, achievementId])
   @@map("user_achievements")
+}
+
+// ─────────────────────────────────────────────
+// SCORE TRANSACTION LEDGER
+// ─────────────────────────────────────────────
+
+model ScoreTransaction {
+  id             String   @id @default(cuid())
+  userId         String
+  eventType      String   // PANDAL_DISCOVERY, RARE_PANDAL_DISCOVERY, FIRST_DISCOVERY_OF_DAY, etc.
+  points         Int
+  referenceType  String?  // pandal_visit, photo, quest, route, streak, achievement
+  referenceId    String?  // visitId, photoId, questId, routeId, etc.
+  idempotencyKey String   @unique
+  metadata       String?  // JSON string
+  createdAt      DateTime @default(now())
+
+  user AnonymousUser @relation(fields: [userId], references: [id])
+
+  @@map("score_transactions")
 }

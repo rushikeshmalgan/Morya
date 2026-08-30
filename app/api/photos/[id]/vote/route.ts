@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { ScoreService } from "@/lib/score-service";
 
 export async function POST(
   request: NextRequest,
@@ -29,7 +30,7 @@ export async function POST(
       moderationStatus: "APPROVED",
       pandal: { is: { status: "APPROVED" } },
     },
-    select: { id: true },
+    select: { id: true, userId: true },
   });
   if (!photo) return NextResponse.json({ error: "Photo not found" }, { status: 404 });
 
@@ -52,11 +53,17 @@ export async function POST(
   try {
     const updatedPhoto = await prisma.$transaction(async (tx) => {
       await tx.photoVote.create({ data: { userId: user.id, photoId } });
-      return tx.photo.update({
+      const updated = await tx.photo.update({
         where: { id: photoId },
         data: { likeCount: { increment: 1 } },
         select: { likeCount: true },
       });
+
+      if (updated.likeCount >= 10) {
+        await ScoreService.processPhoto10Votes(tx, photoId, photo.userId);
+      }
+
+      return updated;
     });
     return NextResponse.json({ voted: true, likeCount: updatedPhoto.likeCount });
   } catch (voteError) {

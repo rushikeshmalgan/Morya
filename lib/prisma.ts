@@ -7,10 +7,10 @@ function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL || "file:./dev.db";
   const adapter = new PrismaLibSql({ url });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new PrismaClient({
+  return new (PrismaClient as any)({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  } as any);
+  });
 }
 
 const globalForPrisma = globalThis as unknown as {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MushakAvatar from "@/components/mushak/MushakAvatar";
 
@@ -37,15 +37,7 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (step === "location" && userLocation) {
-      setLat(userLocation.lat);
-      setLng(userLocation.lng);
-      reverseGeocode(userLocation.lat, userLocation.lng);
-    }
-  }, [step, userLocation]);
-
-  const reverseGeocode = async (latitude: number, longitude: number) => {
+  const reverseGeocode = useCallback(async (latitude: number, longitude: number) => {
     try {
       const res = await fetch(`/api/geocode/reverse?lat=${latitude}&lng=${longitude}`);
       const data = await res.json();
@@ -53,7 +45,15 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
     } catch {
       // ignore
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (step === "location" && userLocation) {
+      setLat((prev) => (prev !== userLocation.lat ? userLocation.lat : prev));
+      setLng((prev) => (prev !== userLocation.lng ? userLocation.lng : prev));
+      reverseGeocode(userLocation.lat, userLocation.lng);
+    }
+  }, [step, userLocation, reverseGeocode]);
 
   const handleLocationCapture = () => {
     if (!navigator.geolocation) {

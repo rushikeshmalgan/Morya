@@ -1,6 +1,7 @@
 // lib/achievements.ts — Achievement unlock logic
 
 import { prisma } from "./prisma";
+import { ScoreService } from "./score-service";
 
 const ACHIEVEMENT_THRESHOLDS = {
   first_darshan: 1,
@@ -101,10 +102,7 @@ async function updateQuestProgress(
       });
       if (completion.count > 0) {
         newlyCompleted += completion.count;
-        await prisma.anonymousUser.update({
-          where: { id: userId },
-          data: { score: { increment: quest.reward } },
-        });
+        await ScoreService.processQuestCompletion(prisma, userId, quest.id);
       }
     }
   }

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hasAdminSession } from "@/lib/admin-auth";
 import { ModerationStatus } from "@prisma/client";
+import { ScoreService } from "@/lib/score-service";
 
 export async function PATCH(
   request: NextRequest,
@@ -26,14 +27,24 @@ export async function PATCH(
     return NextResponse.json({ error: "Photo not found" }, { status: 404 });
   }
 
-  const updated = await prisma.photo.update({
-    where: { id },
-    data: { moderationStatus },
-    include: {
-      user: { select: { generatedName: true, generatedNumber: true } },
-      pandal: { select: { name: true, city: true } },
-    },
+  let scoreAwarded = false;
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedPhoto = await tx.photo.update({
+      where: { id },
+      data: { moderationStatus },
+      include: {
+        user: { select: { generatedName: true, generatedNumber: true } },
+        pandal: { select: { name: true, city: true } },
+      },
+    });
+
+    if (moderationStatus === ModerationStatus.APPROVED) {
+      const award = await ScoreService.processPhotoApproval(tx, photo.id, photo.userId);
+      scoreAwarded = award.awarded;
+    }
+
+    return updatedPhoto;
   });
 
-  return NextResponse.json({ photo: updated });
+  return NextResponse.json({ photo: updated, scoreAwarded });
 }

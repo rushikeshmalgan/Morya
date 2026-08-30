@@ -12,6 +12,7 @@ import {
   updateNightDarshanQuests,
 } from "@/lib/achievements";
 import { parseCoordinate } from "@/lib/validation";
+import { ScoreService } from "@/lib/score-service";
 
 const CHECKIN_RADIUS = Number.parseInt(process.env.CHECKIN_RADIUS_METERS || "150", 10);
 
@@ -106,8 +107,10 @@ export async function POST(request: NextRequest) {
 
   let visit: { id: string; timestamp: Date };
   let updatedUser: { score: number; uniquePandals: number };
+  let scoreAwards: { eventType: string; points: number; awarded: boolean }[] = [];
+
   try {
-    ({ visit, updatedUser } = await prisma.$transaction(async (tx) => {
+    ({ visit, updatedUser, scoreAwards } = await prisma.$transaction(async (tx) => {
       const createdVisit = await tx.pandalVisit.create({
         data: {
           userId: user.id,
@@ -118,15 +121,38 @@ export async function POST(request: NextRequest) {
         },
         select: { id: true, timestamp: true },
       });
+
       const refreshedUser = await tx.anonymousUser.update({
         where: { id: user.id },
         data: {
           uniquePandals: { increment: 1 },
-          score: { increment: 10 + (pandal.isRare ? 20 : 0) },
         },
         select: { score: true, uniquePandals: true },
       });
-      return { visit: createdVisit, updatedUser: refreshedUser };
+
+      const awards = await ScoreService.processPandalDiscovery(tx, {
+        userId: user.id,
+        pandalId,
+        visitId: createdVisit.id,
+        isRare: pandal.isRare,
+        totalUniquePandals: refreshedUser.uniquePandals,
+        visitTimestamp: createdVisit.timestamp,
+      });
+
+      // Simple streak evaluation
+      const todayStr = createdVisit.timestamp.toISOString().split("T")[0];
+      const streakAwards = await ScoreService.processStreakMilestone(
+        tx,
+        user.id,
+        refreshedUser.uniquePandals,
+        todayStr
+      );
+
+      return {
+        visit: createdVisit,
+        updatedUser: refreshedUser,
+        scoreAwards: [...awards, ...streakAwards],
+      };
     }));
   } catch (transactionError) {
     if (transactionError instanceof Prisma.PrismaClientKnownRequestError && transactionError.code === "P2002") {
@@ -174,8 +200,6 @@ export async function POST(request: NextRequest) {
 
     newAchievements.push(...(await updateDiscoverQuests(user.id, updatedUser.uniquePandals)));
   } catch (gamificationError) {
-    // The verified visit is the primary action. A transient achievement error
-    // should not make a successful check-in look failed to the player.
     console.error("Check-in gamification update failed:", gamificationError);
   }
 
@@ -184,11 +208,14 @@ export async function POST(request: NextRequest) {
     select: { score: true, uniquePandals: true },
   });
 
+  const totalPointsEarned = scoreAwards.reduce((sum, a) => sum + (a.awarded ? a.points : 0), 0);
+
   return NextResponse.json({
     success: true,
     visit,
     pandal: { name: pandal.name, isRare: pandal.isRare },
-    scoreEarned: 10 + (pandal.isRare ? 20 : 0),
+    scoreEarned: totalPointsEarned,
+    scoreBreakdown: scoreAwards.filter((a) => a.awarded),
     newScore: currentUser?.score ?? updatedUser.score,
     uniquePandals: currentUser?.uniquePandals ?? updatedUser.uniquePandals,
     newAchievements: [...new Set(newAchievements)],

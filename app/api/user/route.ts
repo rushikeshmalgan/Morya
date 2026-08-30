@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { deviceId } = body;
 
-    if (!deviceId || typeof deviceId !== "string" || deviceId.length < 10) {
+    if (!deviceId || typeof deviceId !== "string" || deviceId.length < 10 || deviceId.length > 128) {
       return NextResponse.json(
         { error: "Invalid deviceId" },
         { status: 400 }
@@ -113,5 +113,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json(user);
+  return NextResponse.json({
+    id: user.id,
+    generatedName: user.generatedName,
+    generatedNumber: user.generatedNumber,
+    city: user.city,
+    score: user.score,
+    uniquePandals: user.uniquePandals,
+    createdAt: user.createdAt,
+    visits: user.visits,
+    achievements: user.achievements,
+    squadMemberships: user.squadMemberships,
+  });
 }

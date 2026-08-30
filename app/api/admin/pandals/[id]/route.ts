@@ -2,29 +2,30 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasAdminSession } from "@/lib/admin-auth";
 import { awardAchievement } from "@/lib/achievements";
 import { PandalStatus } from "@prisma/client";
-
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "bappa-admin-secret";
-
-function isAdmin(request: NextRequest): boolean {
-  return request.headers.get("x-admin-token") === ADMIN_TOKEN;
-}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!hasAdminSession(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const { status, isNew, isRare } = body;
 
   if (!Object.values(PandalStatus).includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+  if ((isNew !== undefined && typeof isNew !== "boolean") || (isRare !== undefined && typeof isRare !== "boolean")) {
+    return NextResponse.json({ error: "isNew and isRare must be booleans" }, { status: 400 });
   }
 
   const pandal = await prisma.pandal.findUnique({ where: { id } });
@@ -34,13 +35,31 @@ export async function PATCH(
 
   const previousStatus = pandal.status;
 
-  const updated = await prisma.pandal.update({
-    where: { id },
-    data: {
-      status,
-      ...(isNew !== undefined && { isNew }),
-      ...(isRare !== undefined && { isRare }),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedPandal = await tx.pandal.update({
+      where: { id },
+      data: {
+        status,
+        ...(isNew !== undefined && { isNew }),
+        ...(isRare !== undefined && { isRare }),
+      },
+    });
+
+    if (previousStatus === PandalStatus.PENDING && status === PandalStatus.APPROVED) {
+      await tx.photo.updateMany({
+        where: { pandalId: id, moderationStatus: "PENDING" },
+        data: { moderationStatus: "APPROVED" },
+      });
+    }
+
+    if (status === PandalStatus.REJECTED) {
+      await tx.photo.updateMany({
+        where: { pandalId: id, moderationStatus: "PENDING" },
+        data: { moderationStatus: "REJECTED" },
+      });
+    }
+
+    return updatedPandal;
   });
 
   // Award Pandal Pioneer achievement when a submission is approved
@@ -55,7 +74,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdmin(request)) {
+  if (!hasAdminSession(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

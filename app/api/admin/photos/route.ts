@@ -2,16 +2,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasAdminSession } from "@/lib/admin-auth";
 import { ModerationStatus } from "@prisma/client";
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "bappa-admin-secret";
-
-function isAdmin(request: NextRequest): boolean {
-  return request.headers.get("x-admin-token") === ADMIN_TOKEN;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!hasAdminSession(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

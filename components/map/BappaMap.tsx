@@ -13,54 +13,83 @@ interface BappaMapProps {
   isDemoMode: boolean;
 }
 
-// Custom SVG markers for each state
+// Custom SVG markers with warm festival styling
 function createMarkerSvg(state: NearbyPandal["state"], isRare: boolean): string {
-  const colors = {
-    detected: "#8A7A6A",
-    revealed: "#C9933A",
-    in_range: "#FF6B00",
-    discovered: "#4ADE80",
-  };
-  const color = colors[state] || "#8A7A6A";
-  const size = state === "in_range" ? 44 : 36;
-
   if (state === "detected") {
-    // Foggy/mystery marker
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-      <circle cx="18" cy="18" r="14" fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="1.5" stroke-dasharray="4 2"/>
-      <text x="18" y="24" text-anchor="middle" font-size="16">🔮</text>
+    // Foggy / mystery marker (soft dusty pink & marigold)
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46">
+      <defs>
+        <filter id="shadow-det" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#80665C" flood-opacity="0.25"/>
+        </filter>
+      </defs>
+      <g filter="url(#shadow-det)">
+        <circle cx="19" cy="19" r="15" fill="#FFF9F1" stroke="#EFA6A0" stroke-width="2" stroke-dasharray="3 2"/>
+        <text x="19" y="24" text-anchor="middle" font-size="15">🪷</text>
+      </g>
     </svg>`;
   }
 
   if (state === "discovered") {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-      <circle cx="18" cy="18" r="14" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>
-      <text x="18" y="24" text-anchor="middle" font-size="18">✅</text>
-      ${isRare ? '<circle cx="18" cy="18" r="17" fill="none" stroke="#FFD700" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>' : ""}
+    // Discovered marker (warm ivory card with gold highlight & checkmark)
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
+      <defs>
+        <filter id="shadow-disc" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#4A3028" flood-opacity="0.2"/>
+        </filter>
+      </defs>
+      <g filter="url(#shadow-disc)">
+        <circle cx="20" cy="20" r="16" fill="#FFF9F1" stroke="#D8A94A" stroke-width="2.2"/>
+        <circle cx="20" cy="20" r="13" fill="#FFE8D2" fill-opacity="0.4"/>
+        <text x="20" y="26" text-anchor="middle" font-size="17">🐘</text>
+        <circle cx="29" cy="11" r="6.5" fill="#6D9275" stroke="#FFFFFF" stroke-width="1.5"/>
+        <text x="29" y="14" text-anchor="middle" font-size="8" fill="#FFFFFF" font-weight="bold">✓</text>
+        ${isRare ? '<circle cx="20" cy="20" r="18" fill="none" stroke="#D8A94A" stroke-width="1.5" stroke-dasharray="3 2"/>' : ""}
+      </g>
     </svg>`;
   }
 
   if (state === "in_range") {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="52" viewBox="0 0 44 52">
-      <circle cx="22" cy="22" r="20" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="2"/>
-      <circle cx="22" cy="22" r="14" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>
-      <text x="22" y="28" text-anchor="middle" font-size="20">🐘</text>
-      ${isRare ? '<circle cx="22" cy="22" r="19" fill="none" stroke="#FFD700" stroke-width="1.5"/>' : ""}
+    // In-range animated festival marker (soft terracotta orange with gold ring)
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56">
+      <defs>
+        <filter id="shadow-range" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#E9784F" flood-opacity="0.4"/>
+        </filter>
+        <linearGradient id="terracotta-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F29572"/>
+          <stop offset="100%" stop-color="#E9784F"/>
+        </linearGradient>
+      </defs>
+      <g filter="url(#shadow-range)">
+        <circle cx="24" cy="24" r="22" fill="#E9784F" fill-opacity="0.2" stroke="#E9784F" stroke-width="1.5" stroke-dasharray="4 2"/>
+        <circle cx="24" cy="24" r="17" fill="url(#terracotta-grad)" stroke="#FFFFFF" stroke-width="2.5"/>
+        <text x="24" y="30" text-anchor="middle" font-size="19">🐘</text>
+        ${isRare ? '<circle cx="36" cy="12" r="7" fill="#D8A94A" stroke="#FFFFFF" stroke-width="1.5"/><text x="36" y="16" text-anchor="middle" font-size="9" fill="#FFF">★</text>' : ""}
+      </g>
     </svg>`;
   }
 
-  // revealed
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-    <circle cx="18" cy="18" r="14" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>
-    <text x="18" y="24" text-anchor="middle" font-size="16">🐘</text>
-    ${isRare ? '<circle cx="18" cy="18" r="17" fill="none" stroke="#FFD700" stroke-width="1" stroke-dasharray="3 2" opacity="0.7"/>' : ""}
+  // revealed state
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
+    <defs>
+      <filter id="shadow-rev" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#80665C" flood-opacity="0.25"/>
+      </filter>
+    </defs>
+    <g filter="url(#shadow-rev)">
+      <circle cx="20" cy="20" r="16" fill="#FFF9F1" stroke="#E9784F" stroke-width="2"/>
+      <circle cx="20" cy="20" r="13" fill="#FFE8D2" fill-opacity="0.5"/>
+      <text x="20" y="26" text-anchor="middle" font-size="16">🐘</text>
+      ${isRare ? '<circle cx="29" cy="11" r="6" fill="#D8A94A" stroke="#FFFFFF" stroke-width="1.5"/><text x="29" y="14.5" text-anchor="middle" font-size="8" fill="#FFF">★</text>' : ""}
+    </g>
   </svg>`;
 }
 
 function createLeafletIcon(state: NearbyPandal["state"], isRare: boolean): L.DivIcon {
   const svg = createMarkerSvg(state, isRare);
-  const size = state === "in_range" ? 44 : 36;
-  const anchor = state === "in_range" ? 22 : 18;
+  const size = state === "in_range" ? 48 : 40;
+  const anchor = state === "in_range" ? 24 : 20;
   return L.divIcon({
     html: svg,
     className: `bappa-marker state-${state}`,
@@ -72,13 +101,21 @@ function createLeafletIcon(state: NearbyPandal["state"], isRare: boolean): L.Div
 
 function createUserIcon(): L.DivIcon {
   return L.divIcon({
-    html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-      <circle cx="10" cy="10" r="8" fill="#FF6B00" fill-opacity="0.9" stroke="white" stroke-width="2"/>
-      <circle cx="10" cy="10" r="3" fill="white"/>
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <defs>
+        <filter id="user-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#4A3028" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+      <g filter="url(#user-shadow)">
+        <circle cx="14" cy="14" r="12" fill="#FFE8D2" fill-opacity="0.8"/>
+        <circle cx="14" cy="14" r="9" fill="#E9784F" stroke="#FFFFFF" stroke-width="2.5"/>
+        <circle cx="14" cy="14" r="4" fill="#FFFFFF"/>
+      </g>
     </svg>`,
     className: "",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 }
 
@@ -87,7 +124,7 @@ export default function BappaMap({
   pandals,
   onPandalTap,
   checkinRadius,
-  isDemoMode,
+  isDemoMode: _isDemoMode,
 }: BappaMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -107,16 +144,18 @@ export default function BappaMap({
       attributionControl: false,
     });
 
-    // Dark/warm OpenStreetMap tiles
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 19,
-        subdomains: "abcd",
-      }
-    ).addTo(map);
+    // Clean, readable, light CartoDB Voyager map tiles (soft warm & readable roads)
+    const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+    const tileUrl = cartoApiKey
+      ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${cartoApiKey}`
+      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
-    // Attribution (small, bottom right)
+    L.tileLayer(tileUrl, {
+      maxZoom: 19,
+      subdomains: "abcd",
+    }).addTo(map);
+
+    // Attribution
     L.control
       .attribution({ prefix: "© CartoDB © OSM" })
       .addTo(map);
@@ -149,11 +188,11 @@ export default function BappaMap({
     } else {
       radiusCircleRef.current = L.circle(latlng, {
         radius: checkinRadius,
-        color: "#FF6B00",
-        fillColor: "#FF6B00",
-        fillOpacity: 0.08,
+        color: "#E9784F",
+        fillColor: "#FFE8D2",
+        fillOpacity: 0.2,
         weight: 1.5,
-        dashArray: "4 4",
+        dashArray: "5 5",
       }).addTo(map);
     }
 

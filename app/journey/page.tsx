@@ -61,153 +61,145 @@ export default function JourneyPage() {
 
   const handleShare = async () => {
     if (!user) return;
-    const text = `🐘 I've discovered ${user.uniquePandals} Ganpati pandals!\n\n${user.generatedName} #${user.generatedNumber}\n\nBAPPA MODE 2026 — Find Bappa. Explore. Compete.\n\nGANPATI BAPPA MORYA! 🐘`;
+    const text = `🐘 I've discovered ${user.uniquePandals} Ganpati pandals in ${user.city || "my city"}!\n\n${user.generatedName} #${user.generatedNumber} | BAPPA MODE 2026\n\nGANPATI BAPPA MORYA! 🌸`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Bappa Mode", text });
+        await navigator.share({ title: "Bappa Mode Journey", text });
       } catch {
         // User cancelled
       }
     } else {
       await navigator.clipboard?.writeText(text);
-      alert("Copied to clipboard! Share with your friends 🐘");
+      alert("Copied journey card to clipboard! Share with your friends 🐘");
     }
   };
 
   return (
-    <div className="min-h-screen mandala-bg pb-20">
+    <div className="min-h-screen mandala-bg pb-24 safe-top safe-bottom">
       {/* Header / Stats */}
-      <div
-        className="px-4 pt-14 pb-6 safe-top"
-        style={{ background: "linear-gradient(to bottom, rgba(201,147,58,0.1), transparent)" }}
-      >
-        <div className="max-w-md mx-auto">
-          {/* Identity */}
-          {user && (
+      <div className="px-4 pt-10 pb-4 max-w-md mx-auto">
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bappa-card p-6 text-center mb-4 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)",
+              border: "1.5px solid var(--border-gold)",
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-6"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+              className="text-5xl mb-2"
             >
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="text-5xl mb-3"
-              >
-                🐘
-              </motion.div>
-              <h1
-                className="font-display font-bold text-2xl"
-                style={{ color: "var(--muted-gold-light)" }}
-              >
-                {user.generatedName.toUpperCase()}
-              </h1>
-              <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                #{user.generatedNumber} • {user.city || "Explorer"}
-              </p>
+              🐘
             </motion.div>
-          )}
+            <span className="text-[11px] font-extrabold uppercase tracking-widest" style={{ color: "var(--saffron-dark)" }}>
+              COLLECTOR IDENTITY
+            </span>
+            <h1 className="font-display font-bold text-2xl mt-0.5" style={{ color: "var(--warm-brown)" }}>
+              {user.generatedName.toUpperCase()}
+            </h1>
+            <p className="text-xs font-semibold mt-1" style={{ color: "var(--muted-brown)" }}>
+              #{user.generatedNumber} • 📍 {user.city || "Festival Explorer"}
+            </p>
 
-          {/* Stats grid */}
-          {user && (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bappa-card p-4 text-center">
-                <p className="font-display font-bold text-3xl" style={{ color: "var(--saffron)" }}>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-2 mt-5">
+              <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
+                <p className="font-display font-bold text-2xl" style={{ color: "var(--saffron-dark)" }}>
                   {user.uniquePandals}
                 </p>
-                <p className="text-xs font-bold mt-1" style={{ color: "var(--fog-gray)" }}>
-                  PANDALS DISCOVERED
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                  Pandals
                 </p>
               </div>
-              <div className="bappa-card p-4 text-center">
-                <p className="font-display font-bold text-3xl" style={{ color: "var(--muted-gold)" }}>
+              <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
+                <p className="font-display font-bold text-2xl" style={{ color: "var(--muted-gold-dark)" }}>
                   {user.score}
                 </p>
-                <p className="text-xs font-bold mt-1" style={{ color: "var(--fog-gray)" }}>
-                  BAPPA SCORE
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                  Score XP
                 </p>
               </div>
-              <div className="bappa-card p-4 text-center">
-                <p className="font-display font-bold text-3xl" style={{ color: "var(--terracotta)" }}>
+              <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
+                <p className="font-display font-bold text-2xl" style={{ color: "var(--success)" }}>
                   {achievements.length}
                 </p>
-                <p className="text-xs font-bold mt-1" style={{ color: "var(--fog-gray)" }}>
-                  ACHIEVEMENTS
-                </p>
-              </div>
-              <div className="bappa-card p-4 text-center">
-                <p className="font-display font-bold text-3xl" style={{ color: "#4ADE80" }}>
-                  {visits.length}
-                </p>
-                <p className="text-xs font-bold mt-1" style={{ color: "var(--fog-gray)" }}>
-                  VISITS
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                  Badges
                 </p>
               </div>
             </div>
-          )}
 
-          {/* Share button */}
-          <button
-            id="share-journey-btn"
-            className="btn-primary w-full"
-            onClick={handleShare}
-          >
-            📤 SHARE MY BAPPA JOURNEY
-          </button>
-        </div>
-      </div>
+            {/* Share CTA */}
+            <button
+              id="share-journey-btn"
+              className="btn-primary w-full mt-4 text-xs font-bold"
+              onClick={handleShare}
+            >
+              📤 SHARE MY BAPPA JOURNEY
+            </button>
+          </motion.div>
+        )}
 
-      {/* Tabs */}
-      <div className="sticky top-0 z-10 px-4 py-3" style={{ background: "rgba(15,11,8,0.95)", backdropFilter: "blur(12px)" }}>
-        <div className="max-w-md mx-auto flex gap-2">
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 rounded-2xl bappa-card mb-4" style={{ background: "rgba(255, 249, 241, 0.95)" }}>
           <button
             id="tab-pandals"
             onClick={() => setActiveTab("pandals")}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+            className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
             style={
               activeTab === "pandals"
-                ? { background: "var(--saffron)", color: "white" }
-                : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }
+                ? {
+                    background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                    color: "#FFFFFF",
+                    boxShadow: "var(--shadow-primary)",
+                  }
+                : { color: "var(--muted-brown)" }
             }
           >
-            🐘 MY PANDALS
+            🐘 MY COLLECTION ({visits.length})
           </button>
           <button
             id="tab-achievements"
             onClick={() => setActiveTab("achievements")}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+            className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
             style={
               activeTab === "achievements"
-                ? { background: "var(--saffron)", color: "white" }
-                : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }
+                ? {
+                    background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                    color: "#FFFFFF",
+                    boxShadow: "var(--shadow-primary)",
+                  }
+                : { color: "var(--muted-brown)" }
             }
           >
-            🏆 ACHIEVEMENTS
+            🏆 BADGES ({achievements.length})
           </button>
         </div>
-      </div>
 
-      <div className="max-w-md mx-auto px-4 pt-4">
-        {/* Pandal Collection */}
+        {/* Content */}
         {activeTab === "pandals" && (
-          <>
+          <div>
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="skeleton h-24 rounded-xl" />
+                  <div key={i} className="skeleton h-24 rounded-2xl" />
                 ))}
               </div>
             ) : visits.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">🐘</div>
-                <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
-                  No Pandals Yet
+              <div className="text-center py-14 bappa-card p-6">
+                <div className="text-5xl mb-3">🐘</div>
+                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
+                  Your Album is Empty
                 </h3>
-                <p className="text-sm mb-6" style={{ color: "var(--fog-gray)" }}>
-                  Head to the map and start discovering Bappa!
+                <p className="text-xs max-w-xs mx-auto mb-5" style={{ color: "var(--muted-brown)" }}>
+                  Head to the map, find pandals around you, and add them to your collection!
                 </p>
-                <a href="/map" className="btn-primary">
-                  🗺️ EXPLORE MAP
+                <a href="/map" className="btn-primary text-xs font-bold">
+                  🗺️ EXPLORE THE MAP
                 </a>
               </div>
             ) : (
@@ -215,68 +207,62 @@ export default function JourneyPage() {
                 {visits.map((visit, i) => (
                   <motion.div
                     key={visit.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="collection-card discovered flex gap-3 overflow-hidden"
+                    transition={{ delay: i * 0.04 }}
+                    className="collection-card discovered flex gap-3.5 p-3 items-center"
                   >
-                    {/* Photo thumbnail */}
+                    {/* Thumbnail */}
                     <div
-                      className="w-20 h-20 flex-shrink-0 flex items-center justify-center"
-                      style={{ background: "var(--bg-surface)" }}
+                      className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden relative flex items-center justify-center"
+                      style={{ background: "#FFE8D2" }}
                     >
                       {visit.pandal.photos[0] ? (
-                        <div className="relative w-20 h-20">
-                          <Image
-                            src={visit.pandal.photos[0].imageUrl}
-                            alt={visit.pandal.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </div>
+                        <Image
+                          src={visit.pandal.photos[0].imageUrl}
+                          alt={visit.pandal.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
                       ) : (
                         <span className="text-3xl">🐘</span>
                       )}
                     </div>
-                    {/* Info */}
-                    <div className="flex-1 py-3 pr-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-bold text-sm" style={{ color: "var(--warm-cream)" }}>
-                            {visit.pandal.name}
-                          </p>
-                          <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                            📍 {visit.pandal.city}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {visit.pandal.isRare && <span className="text-xs">⭐</span>}
-                          <span className="text-xs" style={{ color: "#4ADE80" }}>✅</span>
-                        </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-sm truncate" style={{ color: "var(--warm-brown)" }}>
+                          {visit.pandal.name}
+                        </h4>
+                        {visit.pandal.isRare && <span className="text-xs">⭐</span>}
                       </div>
-                      <p className="text-xs mt-2" style={{ color: "var(--fog-gray)", opacity: 0.7 }}>
-                        Discovered {new Date(visit.timestamp).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      <p className="text-xs mt-0.5" style={{ color: "var(--muted-brown)" }}>
+                        📍 {visit.pandal.city}
+                      </p>
+                      <p className="text-[10px] mt-2 font-semibold" style={{ color: "var(--success)" }}>
+                        ✓ Discovered {new Date(visit.timestamp).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                       </p>
                     </div>
                   </motion.div>
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* Achievements */}
+        {/* Achievements Tab */}
         {activeTab === "achievements" && (
-          <>
+          <div>
             {achievements.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">🏆</div>
-                <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
-                  No Achievements Yet
+              <div className="text-center py-14 bappa-card p-6">
+                <div className="text-5xl mb-3">🏆</div>
+                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
+                  No Badges Unlocked Yet
                 </h3>
-                <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                  Discover your first pandal to unlock your first achievement!
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--muted-brown)" }}>
+                  Discover your first pandal or capture a moment to earn festival badges!
                 </p>
               </div>
             ) : (
@@ -286,26 +272,26 @@ export default function JourneyPage() {
                     key={i}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.06 }}
+                    transition={{ delay: i * 0.05 }}
                     className="achievement-badge w-full"
                   >
-                    <span className="text-2xl">{ua.achievement.icon}</span>
-                    <div>
-                      <p className="font-bold text-sm" style={{ color: "var(--muted-gold-light)" }}>
+                    <span className="text-3xl">{ua.achievement.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate" style={{ color: "var(--warm-brown)" }}>
                         {ua.achievement.name}
                       </p>
-                      <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+                      <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
                         {ua.achievement.description}
                       </p>
                     </div>
-                    <div className="ml-auto text-xs" style={{ color: "var(--fog-gray)" }}>
+                    <div className="text-[10px] font-semibold" style={{ color: "var(--muted-brown)" }}>
                       {new Date(ua.unlockedAt).toLocaleDateString("en-IN")}
                     </div>
                   </motion.div>
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 

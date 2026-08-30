@@ -8,10 +8,6 @@ import { PandalStatus, ModerationStatus } from "@prisma/client";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "bappa-admin-secret";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bappa-admin";
 
-function isAdmin(request: NextRequest): boolean {
-  return request.headers.get("x-admin-token") === ADMIN_TOKEN;
-}
-
 function hasAdminSession(request: NextRequest): boolean {
   return request.cookies.get("admin_session")?.value === ADMIN_TOKEN;
 }

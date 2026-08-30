@@ -10,10 +10,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { code } = body;
+  const body = await request.json().catch(() => null);
+  const { code } = body || {};
 
-  if (!code || typeof code !== "string") {
+  if (!code || typeof code !== "string" || code.trim().length > 32) {
     return NextResponse.json({ error: "Squad code required" }, { status: 400 });
   }
 
@@ -43,9 +43,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await prisma.squadMember.create({
-    data: { squadId: squad.id, userId: user.id },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const memberCount = await tx.squadMember.count({ where: { squadId: squad.id } });
+      if (memberCount >= 20) throw new Error("squad_full");
+      await tx.squadMember.create({ data: { squadId: squad.id, userId: user.id } });
+    });
+  } catch (joinError) {
+    if (joinError instanceof Error && joinError.message === "squad_full") {
+      return NextResponse.json({ error: "This squad is full (max 20 members)." }, { status: 409 });
+    }
+    const latestMembership = await prisma.squadMember.findUnique({
+      where: { squadId_userId: { squadId: squad.id, userId: user.id } },
+    });
+    if (latestMembership) return NextResponse.json({ squad, alreadyMember: true });
+    console.error("POST /api/squads/join error:", joinError);
+    return NextResponse.json({ error: "Unable to join squad" }, { status: 500 });
+  }
 
   const updatedSquad = await prisma.squad.findUnique({
     where: { id: squad.id },

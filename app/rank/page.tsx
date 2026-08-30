@@ -24,13 +24,13 @@ interface SquadData {
 }
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-2xl">🥇</span>;
-  if (rank === 2) return <span className="text-2xl">🥈</span>;
-  if (rank === 3) return <span className="text-2xl">🥉</span>;
+  if (rank === 1) return <span className="text-2xl font-bold">🥇</span>;
+  if (rank === 2) return <span className="text-2xl font-bold">🥈</span>;
+  if (rank === 3) return <span className="text-2xl font-bold">🥉</span>;
   return (
     <span
-      className="font-bold text-sm w-8 text-center"
-      style={{ color: "var(--fog-gray)" }}
+      className="font-extrabold text-sm w-7 text-center rounded-lg py-0.5"
+      style={{ color: "var(--muted-brown)", background: "#FFE8D2" }}
     >
       #{rank}
     </span>
@@ -153,78 +153,84 @@ export default function RankPage() {
   };
 
   return (
-    <div className="min-h-screen mandala-bg pb-20">
+    <div className="min-h-screen mandala-bg pb-24 safe-top safe-bottom">
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 pt-12 pb-4 safe-top" style={{ background: "rgba(15,11,8,0.95)", backdropFilter: "blur(12px)" }}>
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">🏆</span>
-            <div>
-              <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-cream)" }}>
-                LEADERBOARD
-              </h1>
-              <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                Soft Competition — MVP
-              </p>
-            </div>
+      <div className="px-4 pt-10 pb-4 max-w-md mx-auto">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-widest" style={{ color: "var(--saffron-dark)" }}>
+              FESTIVAL RANKS
+            </span>
+            <h1 className="font-display font-bold text-2xl" style={{ color: "var(--warm-brown)" }}>
+              🏆 BAPPA BATTLE
+            </h1>
           </div>
+          <span className="text-3xl">🌸</span>
+        </div>
+        <p className="text-xs mb-4" style={{ color: "var(--muted-brown)" }}>
+          Friendly community leaderboard across cities and squads
+        </p>
 
-          {/* Tabs */}
-          <div className="flex gap-2">
-            {(["global", "city", "squad"] as LeaderboardType[]).map((t) => (
-              <button
-                key={t}
-                id={`tab-${t}`}
-                onClick={() => switchTab(t)}
-                className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-                style={
-                  type === t
-                    ? { background: "var(--saffron)", color: "white" }
-                    : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }
-                }
-              >
-                {t === "global" ? "🌎 Global" : t === "city" ? `📍 ${myCity || "City"}` : "👥 Squad"}
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 rounded-2xl bappa-card" style={{ background: "rgba(255, 249, 241, 0.95)" }}>
+          {(["global", "city", "squad"] as LeaderboardType[]).map((t) => (
+            <button
+              key={t}
+              id={`tab-${t}`}
+              onClick={() => switchTab(t)}
+              className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+              style={
+                type === t
+                  ? {
+                      background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                      color: "#FFFFFF",
+                      boxShadow: "var(--shadow-primary)",
+                    }
+                  : { color: "var(--muted-brown)" }
+              }
+            >
+              {t === "global" ? "🌎 Global" : t === "city" ? `📍 ${myCity || "City"}` : "👥 Squad"}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 pt-4">
+      <div className="max-w-md mx-auto px-4">
         {/* Squad Panel */}
         {type === "squad" && !squadData && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bappa-card p-6 mb-6 text-center"
+            className="bappa-card p-6 mb-5 text-center"
+            style={{ background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)" }}
           >
-            <div className="text-4xl mb-3">👥</div>
-            <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
+            <div className="text-4xl mb-2">👥</div>
+            <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
               Bappa is Better with Friends
             </h3>
-            <p className="text-sm mb-5" style={{ color: "var(--fog-gray)" }}>
-              Create a squad or join one with a code.
+            <p className="text-xs mb-4" style={{ color: "var(--muted-brown)" }}>
+              Create a festival squad with your friends or join one using an invite code.
             </p>
-            <button id="create-squad-btn" className="btn-primary w-full mb-3" onClick={handleCreateSquad}>
-              👥 CREATE SQUAD
+            <button id="create-squad-btn" className="btn-primary w-full mb-3 text-xs font-bold" onClick={handleCreateSquad}>
+              👥 CREATE NEW SQUAD
             </button>
             <div className="flex gap-2">
               <input
-                className="bappa-input flex-1 text-sm"
-                placeholder="Enter squad code (MORYA-XXXX)"
+                className="bappa-input flex-1 text-xs"
+                placeholder="Enter code (e.g. MORYA-XXXX)"
                 value={squadInput}
                 onChange={(e) => setSquadInput(e.target.value.toUpperCase())}
                 id="squad-code-input"
               />
               <button
                 id="join-squad-btn"
-                className="btn-secondary px-4 text-sm"
+                className="btn-secondary px-4 text-xs font-bold"
                 onClick={handleJoinSquad}
               >
                 JOIN
               </button>
             </div>
-            {squadError && <p className="text-xs mt-2" style={{ color: "var(--vermillion)" }}>{squadError}</p>}
+            {squadError && <p className="text-xs mt-2 font-semibold" style={{ color: "var(--vermillion)" }}>{squadError}</p>}
           </motion.div>
         )}
 
@@ -234,17 +240,25 @@ export default function RankPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bappa-card p-4 mb-4 flex items-center justify-between"
+            style={{ background: "#FFE8D2" }}
           >
             <div>
-              <p className="text-xs font-bold" style={{ color: "var(--muted-gold)" }}>YOUR SQUAD CODE</p>
-              <p className="font-display font-bold text-xl" style={{ color: "var(--warm-cream)" }}>{squadCode}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--muted-gold-dark)" }}>
+                YOUR SQUAD CODE
+              </p>
+              <p className="font-display font-bold text-lg" style={{ color: "var(--warm-brown)" }}>
+                {squadCode}
+              </p>
             </div>
             <button
               id="copy-squad-code"
-              className="btn-ghost text-xs"
-              onClick={() => navigator.clipboard?.writeText(squadCode)}
+              className="btn-secondary text-xs px-3 py-1.5 font-bold"
+              onClick={() => {
+                navigator.clipboard?.writeText(squadCode);
+                alert("Squad code copied to clipboard!");
+              }}
             >
-              📋 Copy
+              📋 Copy Code
             </button>
           </motion.div>
         )}
@@ -256,65 +270,77 @@ export default function RankPage() {
           </div>
         )}
 
-        {/* My rank */}
+        {/* My rank banner */}
         {myRank && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mb-4 p-3 rounded-xl text-center"
-            style={{ background: "rgba(255, 107, 0, 0.1)", border: "1px solid rgba(255, 107, 0, 0.3)" }}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 rounded-2xl text-center text-xs font-bold"
+            style={{ background: "#FFE8D2", border: "1.5px solid var(--border-gold)", color: "var(--warm-brown)" }}
           >
-            <span style={{ color: "var(--saffron)" }}>
-              You are <strong>#{myRank}</strong> {type === "global" ? "globally" : `in ${type}`}
-            </span>
+            🌟 You are currently ranked <strong style={{ color: "var(--saffron-dark)" }}>#{myRank}</strong> {type === "global" ? "globally" : `in ${type}`}!
           </motion.div>
         )}
 
         {/* Leaderboard list */}
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="skeleton h-16 rounded-xl" />
+          <div className="space-y-2.5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton h-16 rounded-2xl" />
             ))}
           </div>
         ) : leaderboard.length === 0 && type !== "squad" ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-3">🏆</div>
-            <p style={{ color: "var(--fog-gray)" }}>No explorers found yet. Be the first!</p>
+          <div className="text-center py-12 bappa-card p-6">
+            <div className="text-4xl mb-2">🏆</div>
+            <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+              No explorers found yet. Be the first to explore!
+            </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {leaderboard.map((entry, i) => {
               const isMe = entry.id === myUserId;
               return (
                 <motion.div
                   key={entry.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bappa-card p-4 flex items-center gap-4"
-                  style={isMe ? { border: "1.5px solid var(--saffron)" } : {}}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="bappa-card p-3.5 flex items-center gap-3.5"
+                  style={
+                    isMe
+                      ? {
+                          background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)",
+                          border: "2px solid var(--saffron)",
+                          boxShadow: "var(--shadow-warm)",
+                        }
+                      : {}
+                  }
                 >
                   <RankBadge rank={entry.rank} />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="font-bold truncate"
-                      style={{ color: isMe ? "var(--saffron)" : "var(--warm-cream)", fontSize: "0.9rem" }}
+                      className="font-bold text-sm truncate flex items-center gap-1.5"
+                      style={{ color: "var(--warm-brown)" }}
                     >
-                      {entry.generatedName} #{entry.generatedNumber}
-                      {isMe && <span className="ml-2 text-xs">(YOU)</span>}
+                      <span>{entry.generatedName} #{entry.generatedNumber}</span>
+                      {isMe && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-orange-200 text-orange-800">
+                          YOU
+                        </span>
+                      )}
                     </p>
                     {entry.city && (
-                      <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+                      <p className="text-[11px]" style={{ color: "var(--muted-brown)" }}>
                         📍 {entry.city}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold" style={{ color: "var(--saffron)", fontSize: "1rem" }}>
+                    <p className="font-extrabold text-sm" style={{ color: "var(--saffron-dark)" }}>
                       {entry.uniquePandals} 🐘
                     </p>
-                    <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+                    <p className="text-[10px] font-semibold" style={{ color: "var(--muted-brown)" }}>
                       {entry.score} pts
                     </p>
                   </div>

@@ -17,7 +17,7 @@ export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySele
   useEffect(() => {
     // Check if camera is available
     if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera not available on this device");
+      setCameraError("Camera device not detected or permission denied");
     }
   }, []);
 
@@ -56,22 +56,22 @@ export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySele
       >
         <div className="bottom-sheet-handle" />
 
-        <div className="text-center mb-6">
-          <p className="text-3xl mb-3">📸</p>
-          <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-cream)" }}>
-            CAPTURE BAPPA
+        <div className="text-center mb-5">
+          <p className="text-4xl mb-2">📸</p>
+          <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
+            Capture Bappa Moment
           </h2>
-          <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-            Take a photo of the pandal so other explorers know what they&apos;re looking for.
+          <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+            Snap a clear darshan photo to inspire other pandal hunters!
           </p>
         </div>
 
         {cameraError && (
           <div
-            className="mb-4 p-3 rounded-xl text-xs text-center"
+            className="mb-4 p-3 rounded-xl text-xs text-center font-medium"
             style={{
-              background: "rgba(204, 34, 0, 0.1)",
-              border: "1px solid rgba(204, 34, 0, 0.3)",
+              background: "rgba(217, 72, 59, 0.1)",
+              border: "1px solid rgba(217, 72, 59, 0.25)",
               color: "var(--vermillion)",
             }}
           >
@@ -82,10 +82,10 @@ export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySele
         <div className="space-y-3">
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="btn-primary w-full"
+            className="btn-primary w-full text-xs font-bold"
             id="camera-capture-btn"
           >
-            📸 TAKE PHOTO
+            📸 OPEN CAMERA & TAKE PHOTO
           </button>
           <input
             ref={cameraInputRef}
@@ -98,7 +98,7 @@ export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySele
 
           <button
             onClick={() => galleryInputRef.current?.click()}
-            className="btn-secondary w-full"
+            className="btn-secondary w-full text-xs font-bold"
             id="gallery-select-btn"
           >
             🖼️ CHOOSE FROM GALLERY
@@ -111,7 +111,7 @@ export default function PhotoCaptureSheet({ onClose, onPhotoTaken, onGallerySele
             className="hidden"
           />
 
-          <button onClick={onClose} className="w-full py-3 text-sm font-medium" style={{ color: "var(--fog-gray)" }}>
+          <button onClick={onClose} className="btn-ghost w-full text-xs font-bold">
             CANCEL
           </button>
         </div>

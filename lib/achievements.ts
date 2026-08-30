@@ -67,39 +67,80 @@ export async function awardAchievement(
 /**
  * Update quest progress for DISCOVER_N type quests
  */
-export async function updateDiscoverQuests(
+async function updateQuestProgress(
   userId: string,
-  uniquePandalsCount: number
-): Promise<void> {
+  type: "DISCOVER_N" | "PHOTO_SUBMIT" | "NIGHT_DARSHAN" | "FIND_UNKNOWN",
+  progress: number
+): Promise<string[]> {
   const activeQuests = await prisma.quest.findMany({
     where: {
-      type: "DISCOVER_N",
+      type,
       isActive: true,
+      activeFrom: { lte: new Date() },
       activeUntil: { gte: new Date() },
     },
   });
 
+  let newlyCompleted = 0;
+
   for (const quest of activeQuests) {
-    const userQuest = await prisma.userQuest.upsert({
+    await prisma.userQuest.upsert({
       where: { userId_questId: { userId, questId: quest.id } },
-      create: { userId, questId: quest.id, progress: uniquePandalsCount },
-      update: { progress: uniquePandalsCount },
+      create: { userId, questId: quest.id, progress: Math.min(progress, quest.requirement) },
+      update: { progress: Math.min(progress, quest.requirement) },
     });
 
-    if (!userQuest.completed && uniquePandalsCount >= quest.requirement) {
-      await prisma.userQuest.update({
-        where: { userId_questId: { userId, questId: quest.id } },
+    if (progress >= quest.requirement) {
+      const completion = await prisma.userQuest.updateMany({
+        where: { userId, questId: quest.id, completed: false },
         data: {
           completed: true,
           completedAt: new Date(),
           progress: quest.requirement,
         },
       });
-      // Award quest reward
-      await prisma.anonymousUser.update({
-        where: { id: userId },
-        data: { score: { increment: quest.reward } },
-      });
+      if (completion.count > 0) {
+        newlyCompleted += completion.count;
+        await prisma.anonymousUser.update({
+          where: { id: userId },
+          data: { score: { increment: quest.reward } },
+        });
+      }
     }
   }
+
+  if (newlyCompleted === 0) return [];
+
+  const completedCount = await prisma.userQuest.count({
+    where: { userId, completed: true },
+  });
+  const unlocked: string[] = [];
+  if (completedCount >= 1 && await awardAchievement(userId, "quest_complete_1")) {
+    unlocked.push("quest_complete_1");
+  }
+  if (completedCount >= 5 && await awardAchievement(userId, "quest_complete_5")) {
+    unlocked.push("quest_complete_5");
+  }
+
+  return unlocked;
+}
+
+/** Update progress for count-based pandal discovery quests. */
+export async function updateDiscoverQuests(
+  userId: string,
+  uniquePandalsCount: number
+): Promise<string[]> {
+  return updateQuestProgress(userId, "DISCOVER_N", uniquePandalsCount);
+}
+
+export async function updatePhotoQuests(userId: string): Promise<string[]> {
+  return updateQuestProgress(userId, "PHOTO_SUBMIT", 1);
+}
+
+export async function updateNightDarshanQuests(userId: string): Promise<string[]> {
+  return updateQuestProgress(userId, "NIGHT_DARSHAN", 1);
+}
+
+export async function updatePandalSubmissionQuests(userId: string): Promise<string[]> {
+  return updateQuestProgress(userId, "FIND_UNKNOWN", 1);
 }

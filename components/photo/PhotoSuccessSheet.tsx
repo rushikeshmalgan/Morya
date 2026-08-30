@@ -35,47 +35,47 @@ export default function PhotoSuccessSheet({
 
         <div className="text-center mb-6">
           <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
+            animate={{ scale: [1, 1.18, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-5xl mb-3"
+            className="text-5xl mb-2"
           >
-            📸
+            🌸
           </motion.div>
           <p
-            className="text-xs font-bold tracking-[0.15em] uppercase mb-2"
-            style={{ color: "#4ADE80" }}
+            className="text-xs font-extrabold tracking-[0.15em] uppercase mb-1"
+            style={{ color: "var(--success)" }}
           >
-            MOMENT CAPTURED
+            MOMENT SAVED
           </p>
-          <p className="text-sm mb-2" style={{ color: "var(--fog-gray)" }}>
-            Your photo has been added to your Bappa journey.
-          </p>
-          <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+          <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
+            Bappa Darshan Captured!
+          </h2>
+          <p className="text-xs font-semibold" style={{ color: "var(--muted-brown)" }}>
             {pandalName}
           </p>
         </div>
 
         {addedToLens && (
           <div
-            className="mb-5 p-3 rounded-xl text-center text-sm"
+            className="mb-5 p-3 rounded-2xl text-center text-xs font-semibold"
             style={{
-              background: "rgba(255, 107, 0, 0.1)",
-              border: "1px solid rgba(255, 107, 0, 0.3)",
-              color: "var(--saffron)",
+              background: "#FFE8D2",
+              border: "1px solid var(--border-gold)",
+              color: "var(--warm-brown)",
             }}
           >
-            ✨ Your photo will appear in Bappa Lens after moderation
+            ✨ Your photo will appear in Bappa Lens after quick moderation!
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {addedToLens && (
-            <button onClick={onViewLens} className="btn-primary w-full" id="view-lens-btn">
-              📸 View in Bappa Lens
+            <button onClick={onViewLens} className="btn-primary w-full text-xs font-bold" id="view-lens-btn">
+              📸 VIEW IN BAPPA LENS
             </button>
           )}
-          <button onClick={onContinue} className="btn-secondary w-full" id="continue-explore-btn">
-            Continue Exploring →
+          <button onClick={onContinue} className="btn-secondary w-full text-xs font-bold" id="continue-explore-btn">
+            CONTINUE EXPLORING →
           </button>
         </div>
       </motion.div>

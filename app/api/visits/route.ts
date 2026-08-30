@@ -1,17 +1,19 @@
 // app/api/visits/route.ts — Pandal check-in with GPS verification + anti-cheat
 
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma, PandalStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireSession, checkRateLimit } from "@/lib/auth";
+import { checkRateLimit, requireSession } from "@/lib/auth";
 import { haversineDistance, isMovementPlausible } from "@/lib/geo";
 import {
-  checkAndAwardAchievements,
   awardAchievement,
+  checkAndAwardAchievements,
   updateDiscoverQuests,
+  updateNightDarshanQuests,
 } from "@/lib/achievements";
-import { PandalStatus } from "@prisma/client";
+import { parseCoordinate } from "@/lib/validation";
 
-const CHECKIN_RADIUS = parseInt(process.env.CHECKIN_RADIUS_METERS || "150");
+const CHECKIN_RADIUS = Number.parseInt(process.env.CHECKIN_RADIUS_METERS || "150", 10);
 
 export async function POST(request: NextRequest) {
   const { user, error } = await requireSession(request);
@@ -19,9 +21,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  // Rate limit: 20 check-in attempts per hour
-  const rateKey = `checkin:${user.id}`;
-  const { allowed } = checkRateLimit(rateKey, 20);
+  const { allowed } = checkRateLimit(`checkin:${user.id}`, 20);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many check-in attempts. Please try again later." },
@@ -29,27 +29,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
-  const { pandalId, latitude, longitude, isDemoMode } = body;
+  const body = await request.json().catch(() => null);
+  const pandalId = body?.pandalId;
+  const demoRequested = body?.isDemoMode === true;
+  const demoEnabled = demoRequested && process.env.ALLOW_DEMO_MODE === "true";
+  const latitude = parseCoordinate(body?.latitude, "latitude");
+  const longitude = parseCoordinate(body?.longitude, "longitude");
 
-  if (!pandalId || (!latitude && !isDemoMode) || (!longitude && !isDemoMode)) {
+  if (typeof pandalId !== "string" || pandalId.length < 10 || (!demoEnabled && (latitude === null || longitude === null))) {
     return NextResponse.json(
-      { error: "pandalId, latitude, and longitude are required" },
+      { error: "pandalId and valid latitude and longitude are required" },
       { status: 400 }
     );
   }
 
-  // Fetch pandal
   const pandal = await prisma.pandal.findUnique({ where: { id: pandalId } });
   if (!pandal || pandal.status !== PandalStatus.APPROVED) {
     return NextResponse.json({ error: "Pandal not found" }, { status: 404 });
   }
 
-  // Check if already discovered (HARD RULE)
   const existingVisit = await prisma.pandalVisit.findUnique({
     where: { userId_pandalId: { userId: user.id, pandalId } },
   });
-
   if (existingVisit) {
     return NextResponse.json(
       {
@@ -61,19 +62,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let userLat = latitude;
-  let userLng = longitude;
+  const userLat = demoEnabled ? pandal.latitude : latitude!;
+  const userLng = demoEnabled ? pandal.longitude : longitude!;
 
-  // Demo mode: skip GPS verification (clearly marked)
-  if (isDemoMode && process.env.ALLOW_DEMO_MODE === "true") {
-    userLat = pandal.latitude;
-    userLng = pandal.longitude;
-  } else {
-    // Anti-cheat 1: GPS proximity check
-    const distance = haversineDistance(
-      userLat, userLng, pandal.latitude, pandal.longitude
-    );
-
+  if (!demoEnabled) {
+    const distance = haversineDistance(userLat, userLng, pandal.latitude, pandal.longitude);
     if (distance > CHECKIN_RADIUS) {
       return NextResponse.json(
         {
@@ -86,89 +79,124 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Anti-cheat 2: Speed check against last visit
     const lastVisit = await prisma.pandalVisit.findFirst({
       where: { userId: user.id },
       orderBy: { timestamp: "desc" },
     });
-
-    if (lastVisit) {
-      const plausible = isMovementPlausible(
+    if (
+      lastVisit &&
+      !isMovementPlausible(
         lastVisit.latitude,
         lastVisit.longitude,
         lastVisit.timestamp,
         userLat,
         userLng,
         new Date()
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error: "movement_anomaly",
+          message: "Location anomaly detected. Please verify your location.",
+        },
+        { status: 403 }
       );
-      if (!plausible) {
-        return NextResponse.json(
-          {
-            error: "movement_anomaly",
-            message: "Location anomaly detected. Please verify your location.",
-          },
-          { status: 403 }
-        );
-      }
     }
   }
 
-  // Create the discovery (server timestamps everything)
-  const visit = await prisma.pandalVisit.create({
-    data: {
-      userId: user.id,
-      pandalId,
-      latitude: userLat,
-      longitude: userLng,
-      verificationStatus: "VERIFIED",
-    },
-  });
+  let visit: { id: string; timestamp: Date };
+  let updatedUser: { score: number; uniquePandals: number };
+  try {
+    ({ visit, updatedUser } = await prisma.$transaction(async (tx) => {
+      const createdVisit = await tx.pandalVisit.create({
+        data: {
+          userId: user.id,
+          pandalId,
+          latitude: userLat,
+          longitude: userLng,
+          verificationStatus: "VERIFIED",
+        },
+        select: { id: true, timestamp: true },
+      });
+      const refreshedUser = await tx.anonymousUser.update({
+        where: { id: user.id },
+        data: {
+          uniquePandals: { increment: 1 },
+          score: { increment: 10 + (pandal.isRare ? 20 : 0) },
+        },
+        select: { score: true, uniquePandals: true },
+      });
+      return { visit: createdVisit, updatedUser: refreshedUser };
+    }));
+  } catch (transactionError) {
+    if (transactionError instanceof Prisma.PrismaClientKnownRequestError && transactionError.code === "P2002") {
+      const concurrentVisit = await prisma.pandalVisit.findUnique({
+        where: { userId_pandalId: { userId: user.id, pandalId } },
+      });
+      return NextResponse.json(
+        {
+          alreadyDiscovered: true,
+          message: "You've already discovered this Bappa!",
+          firstVisit: concurrentVisit?.timestamp,
+        },
+        { status: 409 }
+      );
+    }
+    console.error("POST /api/visits error:", transactionError);
+    return NextResponse.json({ error: "Unable to record this visit" }, { status: 500 });
+  }
 
-  // Update user score and unique pandal count
-  const updatedUser = await prisma.anonymousUser.update({
+  const newAchievements: string[] = [];
+  try {
+    newAchievements.push(
+      ...(await checkAndAwardAchievements(user.id, updatedUser.uniquePandals))
+    );
+    if (pandal.isRare && await awardAchievement(user.id, "rare_pandal")) {
+      newAchievements.push("rare_pandal");
+    }
+
+    const hour = new Date().getHours();
+    if (hour >= 20 || hour < 5) {
+      if (await awardAchievement(user.id, "night_darshan")) {
+        newAchievements.push("night_darshan");
+      }
+      newAchievements.push(...(await updateNightDarshanQuests(user.id)));
+    }
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const visitsToday = await prisma.pandalVisit.count({
+      where: { userId: user.id, verificationStatus: "VERIFIED", timestamp: { gte: startOfDay } },
+    });
+    if (visitsToday >= 3 && await awardAchievement(user.id, "dhol_warrior")) {
+      newAchievements.push("dhol_warrior");
+    }
+
+    newAchievements.push(...(await updateDiscoverQuests(user.id, updatedUser.uniquePandals)));
+  } catch (gamificationError) {
+    // The verified visit is the primary action. A transient achievement error
+    // should not make a successful check-in look failed to the player.
+    console.error("Check-in gamification update failed:", gamificationError);
+  }
+
+  const currentUser = await prisma.anonymousUser.findUnique({
     where: { id: user.id },
-    data: {
-      uniquePandals: { increment: 1 },
-      score: { increment: 10 + (pandal.isRare ? 20 : 0) }, // +10 base, +20 for rare
-    },
+    select: { score: true, uniquePandals: true },
   });
-
-  // Check achievements
-  const newAchievements = await checkAndAwardAchievements(
-    user.id,
-    updatedUser.uniquePandals
-  );
-
-  // Rare pandal achievement
-  if (pandal.isRare) {
-    await awardAchievement(user.id, "rare_pandal");
-  }
-
-  // Night darshan achievement (after 8pm)
-  const hour = new Date().getHours();
-  if (hour >= 20 || hour < 5) {
-    const nightAchieved = await awardAchievement(user.id, "night_darshan");
-    if (nightAchieved) newAchievements.push("night_darshan");
-  }
-
-  // Update quests
-  await updateDiscoverQuests(user.id, updatedUser.uniquePandals);
 
   return NextResponse.json({
     success: true,
     visit,
     pandal: { name: pandal.name, isRare: pandal.isRare },
     scoreEarned: 10 + (pandal.isRare ? 20 : 0),
-    newScore: updatedUser.score,
-    uniquePandals: updatedUser.uniquePandals,
-    newAchievements,
-    isDemoMode: isDemoMode || false,
+    newScore: currentUser?.score ?? updatedUser.score,
+    uniquePandals: currentUser?.uniquePandals ?? updatedUser.uniquePandals,
+    newAchievements: [...new Set(newAchievements)],
+    isDemoMode: demoEnabled,
   });
 }
 
-/**
- * GET /api/visits — Get user's discovery history
- */
+/** GET /api/visits — Get the current user's verified discovery history. */
 export async function GET(request: NextRequest) {
   const { user, error } = await requireSession(request);
   if (error || !user) {

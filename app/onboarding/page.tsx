@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { saveUser } from "@/lib/store";
+import { motion } from "framer-motion";
+import { getOrCreateDeviceId, getStoredUser, saveUser } from "@/lib/store";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -14,13 +15,13 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("sessionToken");
-    if (token) {
-      router.push("/map");
+    const existingUser = getStoredUser();
+    if (existingUser?.sessionToken) {
+      router.replace("/map");
       return;
     }
 
-    const id = crypto.randomUUID();
+    const id = getOrCreateDeviceId();
     setDeviceId(id);
 
     if (navigator.geolocation) {
@@ -60,7 +61,6 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create user");
 
-      localStorage.setItem("sessionToken", data.sessionToken);
       saveUser({
         userId: data.userId,
         sessionToken: data.sessionToken,
@@ -93,83 +93,121 @@ export default function OnboardingPage() {
   if (step === "loading") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6 mandala-bg">
-        <div className="text-6xl animate-bounce">🐘</div>
-        <p className="text-lg font-medium" style={{ color: "var(--fog-gray)" }}>
-          Detecting your location...
+        <motion.div
+          animate={{ scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="text-7xl mb-2"
+        >
+          🐘
+        </motion.div>
+        <p className="text-base font-semibold" style={{ color: "var(--muted-brown)" }}>
+          Finding nearby celebrations...
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 gap-6 mandala-bg">
-      <div className="text-7xl">🐘</div>
-      <h1 className="text-3xl font-bold text-center font-display">Bappa Mode</h1>
-      <p className="text-center max-w-xs" style={{ color: "var(--fog-gray)" }}>
-        Discover Ganpati pandals near you. Capture moments. Compete with friends.
-      </p>
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 gap-5 mandala-bg safe-top safe-bottom">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="text-center"
+      >
+        <div className="text-7xl mb-3">🐘</div>
+        <h1
+          className="text-3xl sm:text-4xl font-bold font-display tracking-tight"
+          style={{ color: "var(--warm-brown)" }}
+        >
+          BAPPA MODE
+        </h1>
+        <p className="text-sm mt-2 max-w-xs mx-auto leading-relaxed" style={{ color: "var(--muted-brown)" }}>
+          Your city&apos;s biggest Bappa hunt. Discover pandals, capture festive moments & compete with friends.
+        </p>
+      </motion.div>
 
       {suggestedCity && (
-        <div className="w-full max-w-sm bappa-card p-6">
-          <p className="text-sm mb-3 flex items-center gap-2" style={{ color: "var(--fog-gray)" }}>
-            <span>📍</span> Looks like you&apos;re in <strong style={{ color: "var(--warm-cream)" }}>{suggestedCity}</strong>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm bappa-card p-5"
+        >
+          <p className="text-xs font-semibold mb-3 flex items-center gap-1.5" style={{ color: "var(--muted-brown)" }}>
+            <span>📍</span> We detected you are in <strong style={{ color: "var(--warm-brown)" }}>{suggestedCity}</strong>
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => setCity(suggestedCity)}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-colors ${
+              className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all"
+              style={
                 city === suggestedCity
-                  ? "text-white"
-                  : ""
-              }`}
-              style={city === suggestedCity ? { background: "var(--saffron)" } : { background: "var(--bg-card)", color: "var(--warm-cream)", border: "1px solid var(--border-cream)" }}
+                  ? { background: "var(--saffron)", color: "#FFFFFF", boxShadow: "var(--shadow-primary)" }
+                  : { background: "var(--bg-card)", color: "var(--warm-brown)", border: "1px solid var(--border-cream)" }
+              }
             >
-              Yep, {suggestedCity}
+              ✓ Yes, {suggestedCity}
             </button>
             <button
               onClick={() => setCity("")}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-colors`}
-              style={city === "" ? { background: "var(--saffron)", color: "white" } : { background: "var(--bg-card)", color: "var(--warm-cream)", border: "1px solid var(--border-cream)" }}
+              className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all"
+              style={
+                city === ""
+                  ? { background: "var(--saffron)", color: "#FFFFFF" }
+                  : { background: "var(--bg-card)", color: "var(--warm-brown)", border: "1px solid var(--border-cream)" }
+              }
             >
-              Change
+              Different City
             </button>
           </div>
 
-          {city && city !== suggestedCity && (
+          {city !== suggestedCity && (
             <input
               type="text"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="Enter your city"
-              className="mt-3 w-full bappa-input"
+              placeholder="e.g. Pune, Mumbai, Nashik..."
+              className="mt-3 w-full bappa-input text-sm"
+              autoFocus
             />
           )}
-        </div>
+        </motion.div>
       )}
 
       {!suggestedCity && (
-        <div className="w-full max-w-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm bappa-card p-5"
+        >
+          <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--muted-brown)" }}>
+            📍 Select your city
+          </label>
           <input
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            placeholder="Enter your city"
-            className="w-full bappa-input"
+            placeholder="e.g. Pune, Mumbai, Nagpur..."
+            className="w-full bappa-input text-sm"
           />
-        </div>
+        </motion.div>
       )}
 
       {error && (
-        <p className="text-sm text-center" style={{ color: "var(--vermillion)" }}>{error}</p>
+        <p className="text-xs text-center font-medium" style={{ color: "var(--vermillion)" }}>
+          {error}
+        </p>
       )}
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={handleCreateUser}
         disabled={loading || !city}
-        className="w-full max-w-sm btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full max-w-sm btn-primary disabled:opacity-50 disabled:cursor-not-allowed font-bold"
       >
-        {loading ? "Creating your identity..." : "Start Exploring 🐘"}
-      </button>
+        {loading ? "Generating Bappa Identity..." : "ENTER BAPPA MODE 🐘"}
+      </motion.button>
     </div>
   );
 }

@@ -5,15 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { haversineDistance } from "@/lib/geo";
 import { QuestType } from "@prisma/client";
+import { parseBoundedNumber, parseCoordinate } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const lat = parseFloat(searchParams.get("lat") || "0");
-  const lng = parseFloat(searchParams.get("lng") || "0");
-  const radius = parseFloat(searchParams.get("radius") || "2000"); // default 2km
+  const lat = parseCoordinate(searchParams.get("lat"), "latitude");
+  const lng = parseCoordinate(searchParams.get("lng"), "longitude");
+  const radius = parseBoundedNumber(searchParams.get("radius"), 2000, 100, 20_000);
 
-  if (!lat || !lng) {
-    return NextResponse.json({ error: "lat and lng required" }, { status: 400 });
+  if (lat === null || lng === null || radius === null) {
+    return NextResponse.json({ error: "Valid lat, lng, and radius are required" }, { status: 400 });
   }
 
   const user = await getSessionUser(request);

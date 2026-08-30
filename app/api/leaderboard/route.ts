@@ -2,18 +2,23 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseBoundedInteger, parseRequiredText } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") || "global"; // global | city | squad
-  const city = searchParams.get("city");
+  const type = searchParams.get("type") || "global";
+  const city = parseRequiredText(searchParams.get("city"), 2, 120);
   const squadId = searchParams.get("squadId");
-  const page = parseInt(searchParams.get("page") || "1");
+  const page = parseBoundedInteger(searchParams.get("page"), 1, 1, 1_000);
   const limit = 50;
+
+  if (!page || !["global", "city", "squad"].includes(type)) {
+    return NextResponse.json({ error: "Invalid leaderboard parameters" }, { status: 400 });
+  }
 
   if (type === "global") {
     const users = await prisma.anonymousUser.findMany({
-      orderBy: { uniquePandals: "desc" },
+      orderBy: [{ uniquePandals: "desc" }, { score: "desc" }, { createdAt: "asc" }],
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -33,8 +38,9 @@ export async function GET(request: NextRequest) {
   if (type === "city" && city) {
     const users = await prisma.anonymousUser.findMany({
       where: { city: { equals: city } },
-      orderBy: { uniquePandals: "desc" },
+      orderBy: [{ uniquePandals: "desc" }, { score: "desc" }, { createdAt: "asc" }],
       take: limit,
+      skip: (page - 1) * limit,
       select: {
         id: true,
         generatedName: true,
@@ -45,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const ranked = users.map((u, i) => ({ ...u, rank: i + 1 }));
+    const ranked = users.map((u, i) => ({ ...u, rank: (page - 1) * limit + i + 1 }));
     return NextResponse.json({ type: "city", city, leaderboard: ranked });
   }
 

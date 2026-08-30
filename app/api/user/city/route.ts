@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { parseCoordinate, parseRequiredText } from "@/lib/validation";
 
 export async function PATCH(request: NextRequest) {
   const { user, error } = await requireSession(request);
@@ -10,11 +11,16 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { city, cityLat, cityLng } = body;
+  const body = await request.json().catch(() => null);
+  const city = parseRequiredText(body?.city, 2, 120);
+  const cityLat = parseCoordinate(body?.cityLat, "latitude");
+  const cityLng = parseCoordinate(body?.cityLng, "longitude");
 
-  if (!city || typeof city !== "string") {
+  if (!city) {
     return NextResponse.json({ error: "City name required" }, { status: 400 });
+  }
+  if ((body?.cityLat !== undefined || body?.cityLng !== undefined) && (cityLat === null || cityLng === null)) {
+    return NextResponse.json({ error: "cityLat and cityLng must be valid coordinates" }, { status: 400 });
   }
 
   const updated = await prisma.anonymousUser.update({

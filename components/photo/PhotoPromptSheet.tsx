@@ -14,7 +14,7 @@ interface PhotoPromptSheetProps {
 export default function PhotoPromptSheet({
   pandalName,
   isRare,
-  onClose,
+  onClose: _onClose,
   onTakePhoto,
   onUploadGallery,
   onSkip,
@@ -38,52 +38,52 @@ export default function PhotoPromptSheet({
       >
         <div className="bottom-sheet-handle" />
 
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
+            animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-5xl mb-3"
+            className="text-5xl mb-2"
           >
-            {isRare ? "⭐" : "🐘"}
+            {isRare ? "⭐" : "📸"}
           </motion.div>
           <p
-            className="text-xs font-bold tracking-[0.15em] uppercase mb-2"
-            style={{ color: "var(--saffron)" }}
+            className="text-xs font-extrabold tracking-[0.15em] uppercase mb-1"
+            style={{ color: "var(--saffron-dark)" }}
           >
-            {isRare ? "RARE BAPPA UNLOCKED" : "BAPPA UNLOCKED"}
+            {isRare ? "RARE BAPPA DISCOVERED" : "BAPPA DISCOVERED"}
           </p>
-          <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-cream)" }}>
-            {pandalName.toUpperCase()}
+          <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
+            {pandalName}
           </h2>
-          <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-            You found Bappa!
+          <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+            You unlocked this pandal! Capture your darshan moment.
           </p>
         </div>
 
         <div
-          className="mb-5 p-4 rounded-xl text-center"
+          className="mb-5 p-4 rounded-2xl text-center"
           style={{
-            background: "rgba(201, 147, 58, 0.08)",
+            background: "#FFE8D2",
             border: "1px solid var(--border-gold)",
           }}
         >
-          <p className="text-2xl mb-2">📸</p>
-          <p className="font-bold text-sm mb-1" style={{ color: "var(--warm-cream)" }}>
-            Capture your moment
+          <p className="text-2xl mb-1">✨</p>
+          <p className="font-bold text-sm mb-0.5" style={{ color: "var(--warm-brown)" }}>
+            Capture Your Bappa Moment
           </p>
-          <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-            Take a photo of this pandal and add it to your Bappa journey.
+          <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+            Share your photo with the community in Bappa Lens and save it to your Journey album.
           </p>
         </div>
 
-        <div className="space-y-3">
-          <button onClick={onTakePhoto} className="btn-primary w-full" id="photo-take-btn">
+        <div className="space-y-2.5">
+          <button onClick={onTakePhoto} className="btn-primary w-full text-xs font-bold" id="photo-take-btn">
             📸 TAKE PHOTO
           </button>
-          <button onClick={onUploadGallery} className="btn-secondary w-full" id="photo-gallery-btn">
-            🖼️ UPLOAD FROM GALLERY
+          <button onClick={onUploadGallery} className="btn-secondary w-full text-xs font-bold" id="photo-gallery-btn">
+            🖼️ CHOOSE FROM GALLERY
           </button>
-          <button onClick={onSkip} className="w-full py-3 text-sm font-medium" style={{ color: "var(--fog-gray)" }}>
+          <button onClick={onSkip} className="btn-ghost w-full text-xs font-bold">
             SKIP FOR NOW
           </button>
         </div>

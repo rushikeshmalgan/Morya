@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
  */
 export async function getSessionUser(request: NextRequest) {
   const token = request.headers.get("x-session-token");
-  if (!token) return null;
+  if (!token || token.length < 16 || token.length > 256) return null;
 
   try {
     const user = await prisma.anonymousUser.findUnique({
@@ -57,6 +57,11 @@ export function checkRateLimit(
   windowMs: number = 60 * 60 * 1000 // 1 hour
 ): { allowed: boolean; remaining: number } {
   const now = Date.now();
+  if (rateLimitStore.size > 1_000) {
+    for (const [storedKey, storedRecord] of rateLimitStore) {
+      if (storedRecord.resetAt <= now) rateLimitStore.delete(storedKey);
+    }
+  }
   const record = rateLimitStore.get(key);
 
   if (!record || now > record.resetAt) {
@@ -70,4 +75,8 @@ export function checkRateLimit(
 
   record.count++;
   return { allowed: true, remaining: maxRequests - record.count };
+}
+
+export function getClientIp(request: NextRequest): string {
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 }

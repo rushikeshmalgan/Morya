@@ -639,8 +639,10 @@ async function main() {
   await prisma.anonymousUser.deleteMany();
 
   // Seed pandals
+  const createdPandals = [];
   for (const pandal of PANDALS) {
-    await prisma.pandal.create({ data: pandal });
+    const created = await prisma.pandal.create({ data: pandal });
+    createdPandals.push(created);
   }
   console.log(`✅ Created ${PANDALS.length} pandals`);
 
@@ -670,8 +672,9 @@ async function main() {
     { name: "Morya Wanderer", num: 6677, city: "Nagpur", pandals: 7, score: 175 },
   ];
 
+  const createdUsers = [];
   for (const u of demoUsers) {
-    await prisma.anonymousUser.create({
+    const user = await prisma.anonymousUser.create({
       data: {
         deviceId: `demo-${u.num}`,
         sessionToken: `demo-token-${u.num}`,
@@ -682,8 +685,45 @@ async function main() {
         score: u.score,
       },
     });
+    createdUsers.push(user);
   }
   console.log(`✅ Created ${demoUsers.length} demo leaderboard users`);
+
+  // Seed sample photos from public/photos to pandals and Bappa Lens
+  const photoFiles = [
+    { url: "/photos/bappa-1.jpg", cat: "BEST_BAPPA" as const, likes: 64, isPod: true, feat: true, caption: "Kasba Ganpati Manacha Pahila Darshan" },
+    { url: "/photos/bappa-2.jpg", cat: "BEST_DECORATION" as const, likes: 48, isPod: false, feat: true, caption: "Magnificent floral decor and lighting" },
+    { url: "/photos/bappa-3.jpg", cat: "BEST_BAPPA" as const, likes: 92, isPod: false, feat: true, caption: "Dagdusheth Halwai Golden Bappa" },
+    { url: "/photos/bappa-4.jpg", cat: "NIGHT_DARSHAN" as const, likes: 35, isPod: false, feat: false, caption: "Divine aarti late evening" },
+    { url: "/photos/bappa-5.jpg", cat: "BEST_VIBE" as const, likes: 78, isPod: false, feat: true, caption: "Dhol tasha procession fervor" },
+    { url: "/photos/bappa-6.jpg", cat: "BEST_SHOT" as const, likes: 29, isPod: false, feat: false, caption: "Peaceful quiet morning darshan" },
+    { url: "/photos/bappa-7.jpg", cat: "BEST_BAPPA" as const, likes: 53, isPod: false, feat: false, caption: "Lalbaugcha Raja Darshan" },
+    { url: "/photos/bappa-8.jpg", cat: "BEST_DECORATION" as const, likes: 41, isPod: false, feat: false, caption: "Eco-friendly Clay Ganesh idol" },
+    { url: "/photos/bappa-9.jpg", cat: "NIGHT_DARSHAN" as const, likes: 62, isPod: false, feat: true, caption: "Illuminated pandal gates" },
+    { url: "/photos/bappa-10.jpg", cat: "BEST_SHOT" as const, likes: 88, isPod: false, feat: true, caption: "He is coming soon! Ganpati Bappa Morya" },
+    { url: "/photos/bappa-11.jpg", cat: "BEST_BAPPA" as const, likes: 47, isPod: false, feat: false, caption: "Warm blessings from Bappa" },
+  ];
+
+  for (let i = 0; i < photoFiles.length; i++) {
+    const p = photoFiles[i];
+    const targetPandal = createdPandals[i % createdPandals.length];
+    const targetUser = createdUsers[i % createdUsers.length];
+
+    await prisma.photo.create({
+      data: {
+        userId: targetUser.id,
+        pandalId: targetPandal.id,
+        imageUrl: p.url,
+        category: p.cat,
+        likeCount: p.likes,
+        isPhotoOfDay: p.isPod,
+        isFeatured: p.feat,
+        caption: p.caption,
+        moderationStatus: "APPROVED",
+      },
+    });
+  }
+  console.log(`✅ Seeded ${photoFiles.length} curated Bappa photos into pandals & lens feed`);
 
   console.log("\n🐘 Seed complete! GANPATI BAPPA MORYA!");
 }

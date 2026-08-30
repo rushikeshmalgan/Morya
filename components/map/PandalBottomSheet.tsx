@@ -15,18 +15,19 @@ interface PandalBottomSheetProps {
 
 function StateLabel({ state }: { state: NearbyPandal["state"] }) {
   const config = {
-    detected: { label: "SOMETHING IS NEARBY...", color: "var(--fog-gray)", icon: "🔮" },
-    revealed: { label: "BAPPA DETECTED", color: "var(--muted-gold)", icon: "🐘" },
-    in_range: { label: "WITHIN DISCOVERY RANGE", color: "var(--saffron)", icon: "✨" },
-    discovered: { label: "ALREADY DISCOVERED", color: "#4ADE80", icon: "✅" },
+    detected: { label: "SOMETHING IS NEARBY...", bg: "#FFE8D2", color: "#80665C", icon: "🪷" },
+    revealed: { label: "BAPPA DETECTED", bg: "#FFF4E3", color: "#B88A2E", icon: "🐘" },
+    in_range: { label: "WITHIN DISCOVERY RANGE", bg: "#FFE8D2", color: "#D46237", icon: "✨" },
+    discovered: { label: "ALREADY DISCOVERED", bg: "#EBF5ED", color: "#6D9275", icon: "✅" },
   };
   const c = config[state];
   return (
-    <div className="flex items-center gap-2 mb-3">
+    <div
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-[0.1em] mb-3"
+      style={{ background: c.bg, color: c.color }}
+    >
       <span>{c.icon}</span>
-      <span className="text-xs font-bold tracking-[0.15em]" style={{ color: c.color }}>
-        {c.label}
-      </span>
+      <span>{c.label}</span>
     </div>
   );
 }
@@ -34,7 +35,7 @@ function StateLabel({ state }: { state: NearbyPandal["state"] }) {
 export default function PandalBottomSheet({
   pandal,
   userLocation: _userLocation,
-  checkinRadius: _checkinRadius,
+  checkinRadius,
   isDemoMode,
   onClose,
   onCheckin,
@@ -67,62 +68,59 @@ export default function PandalBottomSheet({
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 400 }}
         className="bottom-sheet"
-        style={{ paddingBottom: "90px" }}
+        style={{ paddingBottom: "96px" }}
       >
         {/* Handle */}
         <div className="bottom-sheet-handle" />
 
         {/* State label */}
-        <StateLabel state={pandal.state} />
-
-        {/* Name */}
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2
-              className="font-display font-bold"
-              style={{
-                fontSize: "1.5rem",
-                color: pandal.name === "???" ? "var(--fog-gray)" : "var(--warm-cream)",
-              }}
-            >
-              {pandal.name === "???" ? "UNKNOWN BAPPA" : pandal.name.toUpperCase()}
-            </h2>
-            {pandal.address && (
-              <p className="text-sm mt-1" style={{ color: "var(--fog-gray)" }}>
-                📍 {pandal.address}
-              </p>
-            )}
-          </div>
+        <div className="flex items-center justify-between">
+          <StateLabel state={pandal.state} />
           {pandal.isRare && (
-            <span className="bappa-pill ml-2">⭐ Rare</span>
+            <span className="bappa-pill font-bold">
+              ⭐ Rare Pandal
+            </span>
           )}
         </div>
 
-        {/* Stats row */}
-        <div className="flex gap-4 mb-5">
-          <div
-            className="flex items-center gap-1.5 text-sm"
-            style={{ color: "var(--saffron)" }}
+        {/* Name */}
+        <div className="mb-4">
+          <h2
+            className="font-display font-bold"
+            style={{
+              fontSize: "1.5rem",
+              color: pandal.name === "???" ? "var(--muted-brown)" : "var(--warm-brown)",
+              letterSpacing: "-0.01em",
+            }}
           >
+            {pandal.name === "???" ? "Unknown Bappa" : pandal.name}
+          </h2>
+          {pandal.address && (
+            <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: "var(--muted-brown)" }}>
+              <span>📍</span> {pandal.address}
+            </p>
+          )}
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center gap-3 p-3 rounded-2xl mb-4" style={{ background: "#FFE8D2", border: "1px solid rgba(216,169,74,0.2)" }}>
+          <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: "var(--saffron-dark)" }}>
             <span>📍</span>
-            <span className="font-bold">{formatDistance(pandal.distance)}</span>
-            <span style={{ color: "var(--fog-gray)" }}>away</span>
+            <span>{formatDistance(pandal.distance)}</span>
           </div>
-          <div
-            className="flex items-center gap-1.5 text-sm"
-            style={{ color: "var(--fog-gray)" }}
-          >
+          <span style={{ color: "rgba(128,102,92,0.4)" }}>•</span>
+          <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--warm-brown)" }}>
             <span>👥</span>
-            <span>{pandal.visitCount.toLocaleString()} visitors</span>
+            <span>{pandal.visitCount.toLocaleString()} explorers</span>
           </div>
           {pandal.photoCount > 0 && (
-            <div
-              className="flex items-center gap-1.5 text-sm"
-              style={{ color: "var(--fog-gray)" }}
-            >
-              <span>📸</span>
-              <span>{pandal.photoCount} photos</span>
-            </div>
+            <>
+              <span style={{ color: "rgba(128,102,92,0.4)" }}>•</span>
+              <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--warm-brown)" }}>
+                <span>📸</span>
+                <span>{pandal.photoCount} photos</span>
+              </div>
+            </>
           )}
         </div>
 
@@ -130,7 +128,7 @@ export default function PandalBottomSheet({
         {pandal.description && (
           <p
             className="text-sm leading-relaxed mb-5"
-            style={{ color: "var(--fog-gray)" }}
+            style={{ color: "var(--muted-brown)" }}
           >
             {pandal.description}
           </p>
@@ -140,14 +138,18 @@ export default function PandalBottomSheet({
         {aartiTimes.length > 0 && (
           <div className="mb-5">
             <p
-              className="text-xs font-bold tracking-[0.1em] uppercase mb-2"
-              style={{ color: "var(--muted-gold)" }}
+              className="text-xs font-bold tracking-[0.1em] uppercase mb-2 flex items-center gap-1.5"
+              style={{ color: "var(--muted-gold-dark)" }}
             >
-              🪔 AARTI TIMINGS
+              <span>🪔</span> AARTI TIMINGS
             </p>
             <div className="flex flex-wrap gap-2">
               {aartiTimes.map((time: string) => (
-                <span key={time} className="bappa-pill">
+                <span
+                  key={time}
+                  className="px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ background: "#FFF4E3", border: "1px solid var(--border-gold)", color: "var(--warm-brown)" }}
+                >
                   🕐 {time}
                 </span>
               ))}
@@ -158,47 +160,48 @@ export default function PandalBottomSheet({
         {/* Distance guidance */}
         {pandal.state !== "discovered" && pandal.state !== "in_range" && (
           <div
-            className="mb-4 p-3 rounded-xl text-sm"
+            className="mb-5 p-3.5 rounded-2xl text-sm"
             style={{
-              background: "rgba(201, 147, 58, 0.08)",
-              border: "1px solid var(--border-gold)",
-              color: "var(--fog-gray)",
+              background: "#FFF4E3",
+              border: "1px solid var(--border-cream)",
+              color: "var(--muted-brown)",
             }}
           >
             {pandal.state === "revealed"
               ? `🐘 You're ${formatDistance(pandal.distance)} away. Keep walking to unlock this Bappa!`
-              : `🔮 Walk closer to reveal this Bappa. Something is nearby...`}
+              : `🪷 Walk closer to reveal this Bappa. Something special is nearby...`}
           </div>
         )}
 
-        {/* Buttons */}
+        {/* Actions */}
         <div className="flex gap-3">
           {canCheckin ? (
             <button
               id={`checkin-${pandal.id}`}
-              className="btn-primary flex-1"
+              className="btn-primary flex-1 text-sm font-bold"
               onClick={() => onCheckin(pandal.id)}
             >
-              {isDemoMode ? "🎮 UNLOCK (DEMO)" : "📸 TAKE PHOTO & UNLOCK"}
+              {isDemoMode ? "🎮 UNLOCK THIS BAPPA (DEMO)" : "🐘 DISCOVER THIS BAPPA"}
             </button>
           ) : (
             <div
-              className="flex-1 p-3 rounded-xl text-center text-sm font-semibold"
+              className="flex-1 p-3 rounded-xl text-center text-sm font-semibold flex items-center justify-center gap-1.5"
               style={{
-                background: "var(--bg-card)",
+                background: "#FFE8D2",
                 border: "1px solid var(--border-cream)",
-                color: "var(--fog-gray)",
+                color: "var(--muted-brown)",
               }}
             >
-              📍 Get closer to unlock
+              <span>📍</span> Get within {checkinRadius}m to unlock
             </div>
           )}
           <button
             id={`directions-${pandal.id}`}
-            className="btn-secondary px-4"
+            className="btn-secondary px-4 text-base"
+            title="Directions"
             onClick={openDirections}
           >
-            🗺️
+            🧭
           </button>
         </div>
       </motion.div>

@@ -16,7 +16,7 @@ export default function BottomNav({ active }: { active: string }) {
 
   return (
     <nav className="bottom-nav">
-      <div className="flex items-center justify-around max-w-md mx-auto px-2">
+      <div className="flex items-center justify-around max-w-md mx-auto px-3">
         {NAV_ITEMS.map((item) => {
           const isActive = current === item.href.slice(1);
           return (
@@ -25,7 +25,6 @@ export default function BottomNav({ active }: { active: string }) {
               href={item.href}
               id={item.id}
               className={`bottom-nav-item ${isActive ? "active" : ""}`}
-              style={isActive ? { background: "rgba(255, 107, 0, 0.1)", borderRadius: "12px" } : {}}
             >
               <span className="bottom-nav-icon">{item.icon}</span>
               <span>{item.label}</span>

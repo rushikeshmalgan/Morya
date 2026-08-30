@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { PandalStatus } from "@prisma/client";
 
 export async function GET(
   request: NextRequest,
@@ -32,6 +33,9 @@ export async function GET(
   });
 
   if (!pandal) {
+    return NextResponse.json({ error: "Pandal not found" }, { status: 404 });
+  }
+  if (pandal.status !== PandalStatus.APPROVED && pandal.submittedBy !== user?.id) {
     return NextResponse.json({ error: "Pandal not found" }, { status: 404 });
   }
 

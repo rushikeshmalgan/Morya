@@ -1,16 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import BottomNav from "@/components/shared/BottomNav";
 
 interface Photo {
   id: string;
   imageUrl: string;
   likeCount: number;
   category: string;
+  caption?: string;
+  isPhotoOfDay?: boolean;
+  isFeatured?: boolean;
   timestamp: string;
   user: { generatedName: string; generatedNumber: number };
   pandal: { name: string; city: string };
 }
+
+const CATEGORIES = [
+  { key: "", label: "✨ All Moments" },
+  { key: "BEST_BAPPA", label: "🐘 Best Bappa" },
+  { key: "BEST_DECORATION", label: "🌸 Best Decoration" },
+  { key: "BEST_VIBE", label: "🥁 Dhol & Vibe" },
+  { key: "NIGHT_DARSHAN", label: "🌙 Night Darshan" },
+  { key: "BEST_SHOT", label: "📸 Best Shot" },
+];
 
 export default function LensPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -26,7 +40,8 @@ export default function LensPage() {
       .then((data) => {
         setPhotos(data.photos || []);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [category]);
 
   const handleVote = async (photoId: string) => {
@@ -52,81 +67,149 @@ export default function LensPage() {
     setPhotos((prev) =>
       prev.map((p) =>
         p.id === photoId
-          ? { ...p, likeCount: data.voted ? p.likeCount + 1 : p.likeCount - 1 }
+          ? { ...p, likeCount: data.voted ? p.likeCount + 1 : Math.max(0, p.likeCount - 1) }
           : p
       )
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 mandala-bg">
-        <div className="text-4xl animate-pulse">📸</div>
-        <p style={{ color: "var(--fog-gray)" }}>Loading Bappa Lens...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4 mandala-bg min-h-screen">
-      <h1 className="text-2xl font-bold mb-1 font-display">📸 Bappa Lens</h1>
-      <p className="text-sm mb-4" style={{ color: "var(--fog-gray)" }}>
-        Community photos from pandals across India
-      </p>
+    <div className="min-h-screen mandala-bg pb-24 safe-top safe-bottom">
+      {/* Header */}
+      <div className="px-4 pt-10 pb-4 max-w-md mx-auto">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-widest" style={{ color: "var(--saffron-dark)" }}>
+              COMMUNITY FEED
+            </span>
+            <h1 className="text-2xl font-bold font-display tracking-tight" style={{ color: "var(--warm-brown)" }}>
+              📸 BAPPA LENS
+            </h1>
+          </div>
+          <span className="text-3xl">🌸</span>
+        </div>
+        <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+          Moments captured by explorers from pandals across the city
+        </p>
 
-      {/* Category filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-        {["", "BEST_BAPPA", "BEST_DECORATION", "BEST_VIBE", "NIGHT_DARSHAN", "BEST_SHOT"].map((cat) => (
-          <button
-            key={cat || "all"}
-            onClick={() => setCategory(cat)}
-            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-              category === cat
-                ? "text-white"
-                : ""
-            }`}
-            style={category === cat ? { background: "var(--saffron)" } : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }}
-          >
-            {cat || "All"}
-          </button>
-        ))}
+        {/* Category Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mt-4 no-scrollbar">
+          {CATEGORIES.map((cat) => {
+            const isSelected = category === cat.key;
+            return (
+              <button
+                key={cat.key || "all"}
+                onClick={() => setCategory(cat.key)}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0"
+                style={
+                  isSelected
+                    ? {
+                        background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                        color: "#FFFFFF",
+                        boxShadow: "var(--shadow-primary)",
+                      }
+                    : {
+                        background: "var(--bg-card)",
+                        color: "var(--warm-brown)",
+                        border: "1px solid var(--border-cream)",
+                      }
+                }
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {photos.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-4xl mb-4">📸</p>
-          <p style={{ color: "var(--fog-gray)" }}>No photos yet. Be the first to upload!</p>
-        </div>
-      ) : (
-        <div className="photo-grid">
-          {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className="photo-card"
+      {/* Main Content */}
+      <div className="px-4 max-w-md mx-auto">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton aspect-square rounded-2xl" />
+            ))}
+          </div>
+        ) : photos.length === 0 ? (
+          <div className="text-center py-20">
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-6xl mb-3"
             >
-              <img
-                src={photo.imageUrl}
-                alt={photo.pandal.name}
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                <p className="text-xs font-medium text-white truncate">{photo.pandal.name}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-white/70">
-                    {photo.user.generatedName} #{photo.user.generatedNumber}
-                  </span>
-                  <button
-                    onClick={() => handleVote(photo.id)}
-                    className="text-xs"
-                  >
-                    {votedIds.has(photo.id) ? "❤️" : "🤍"} {photo.likeCount}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              📸
+            </motion.div>
+            <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
+              No Moments Shared Yet
+            </h3>
+            <p className="text-xs max-w-xs mx-auto mb-5" style={{ color: "var(--muted-brown)" }}>
+              Discover a pandal on the map and be the first to capture and share a Bappa moment!
+            </p>
+            <a href="/map" className="btn-primary text-xs">
+              🗺️ EXPLORE MAP
+            </a>
+          </div>
+        ) : (
+          <div className="photo-grid pt-2">
+            {photos.map((photo, index) => {
+              const isLiked = votedIds.has(photo.id);
+              return (
+                <motion.div
+                  key={photo.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.04 }}
+                  className="photo-card group"
+                >
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.pandal?.name || "Bappa Moment"}
+                    loading="lazy"
+                  />
+
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                    {photo.isPhotoOfDay && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-amber-950 shadow-md">
+                        ✨ Photo of Day
+                      </span>
+                    )}
+                    {photo.isFeatured && !photo.isPhotoOfDay && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-orange-400 text-white shadow-md">
+                        🔥 Trending
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Overlay on hover/mobile */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex flex-col justify-end p-3 text-white">
+                    <p className="text-xs font-bold leading-tight truncate drop-shadow-sm">
+                      {photo.pandal?.name || "Bappa Darshan"}
+                    </p>
+                    <div className="flex items-center justify-between mt-1 text-[10px]">
+                      <span className="opacity-90 truncate max-w-[90px]">
+                        {photo.user?.generatedName || "Explorer"}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVote(photo.id);
+                        }}
+                        className="flex items-center gap-1 font-bold bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full hover:scale-110 active:scale-95 transition-transform"
+                      >
+                        <span>{isLiked ? "❤️" : "🤍"}</span>
+                        <span>{photo.likeCount}</span>
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <BottomNav active="lens" />
     </div>
   );
 }

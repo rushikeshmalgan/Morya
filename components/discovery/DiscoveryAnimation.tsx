@@ -11,33 +11,38 @@ interface DiscoveryAnimationProps {
   onDismiss: () => void;
 }
 
-// Simple confetti particle
-function Confetti() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+// Soft festival petal & gold particles
+function FestivalPetals() {
+  const petals = Array.from({ length: 24 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
-    delay: Math.random() * 0.5,
-    color: ["#FF6B00", "#C9933A", "#E8BE6A", "#FFF8E7", "#CC2200"][Math.floor(Math.random() * 5)],
+    delay: Math.random() * 0.6,
+    color: ["#E9784F", "#D8A94A", "#EFA6A0", "#FFF9F1", "#F29572"][Math.floor(Math.random() * 5)],
+    size: 8 + Math.random() * 8,
+    symbol: ["🌸", "🌼", "✨", "🪷", "•"][Math.floor(Math.random() * 5)],
   }));
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {particles.map((p) => (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {petals.map((p) => (
         <motion.div
           key={p.id}
-          className="absolute w-2 h-2 rounded-full"
-          style={{ left: `${p.x}%`, top: "-10px", background: p.color }}
+          className="absolute flex items-center justify-center select-none"
+          style={{ left: `${p.x}%`, top: "-20px", fontSize: p.size }}
           animate={{
             y: ["0vh", "110vh"],
+            x: [`${p.x}%`, `${p.x + (Math.random() * 15 - 7.5)}%`],
             rotate: [0, 360 + Math.random() * 360],
-            opacity: [1, 1, 0],
+            opacity: [1, 0.9, 0],
           }}
           transition={{
-            duration: 2 + Math.random() * 1.5,
+            duration: 2.5 + Math.random() * 1.5,
             delay: p.delay,
-            ease: "easeIn",
+            ease: "easeOut",
           }}
-        />
+        >
+          <span>{p.symbol}</span>
+        </motion.div>
       ))}
     </div>
   );
@@ -53,47 +58,48 @@ export default function DiscoveryAnimation({
   const [showScore, setShowScore] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowScore(true), 800);
-    const t2 = setTimeout(() => onDismiss(), 5000);
+    const t1 = setTimeout(() => setShowScore(true), 600);
+    const t2 = setTimeout(() => onDismiss(), 6000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [onDismiss]);
 
   return (
     <>
-      <Confetti />
+      <FestivalPetals />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 flex items-center justify-center p-6"
-        style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+        className="fixed inset-0 z-40 flex items-center justify-center p-5"
+        style={{ background: "rgba(74, 48, 40, 0.65)", backdropFilter: "blur(8px)" }}
         onClick={onDismiss}
       >
         <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="text-center w-full max-w-xs"
+          initial={{ scale: 0.7, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.85, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          className="bappa-card p-6 text-center w-full max-w-xs shadow-2xl relative overflow-hidden"
+          style={{ background: "#FFF9F1", border: "2px solid var(--border-gold)" }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Glow ring */}
-          <div className="relative flex items-center justify-center mb-6">
+          {/* Subtle warm glow circle */}
+          <div className="relative flex items-center justify-center mb-4 mt-2">
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: 120, height: 120,
+                width: 130, height: 130,
                 background: isRare
-                  ? "radial-gradient(circle, rgba(255,215,0,0.3), transparent)"
-                  : "radial-gradient(circle, rgba(255,107,0,0.3), transparent)",
+                  ? "radial-gradient(circle, rgba(216,169,74,0.35), transparent 70%)"
+                  : "radial-gradient(circle, rgba(233,120,79,0.25), transparent 70%)",
               }}
-              animate={{ scale: [1, 1.5, 1.5], opacity: [1, 0, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              animate={{ scale: [1, 1.4, 1.4], opacity: [0.9, 0, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
             />
             <motion.div
-              className="text-7xl z-10"
-              animate={{ scale: [0.5, 1.2, 1], rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 0.8 }}
+              className="text-6xl z-10 filter drop-shadow-md"
+              animate={{ scale: [0.6, 1.15, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 0.7, type: "spring" }}
             >
               🐘
             </motion.div>
@@ -101,40 +107,40 @@ export default function DiscoveryAnimation({
 
           {/* Shimmer header */}
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="shimmer-text font-bold tracking-[0.2em] text-xs uppercase mb-2"
+            transition={{ delay: 0.2 }}
+            className="shimmer-text font-bold tracking-[0.2em] text-xs uppercase mb-1"
           >
-            {isRare ? "⭐ RARE BAPPA UNLOCKED" : "✨ BAPPA UNLOCKED"}
+            {isRare ? "⭐ RARE BAPPA DISCOVERED" : "✨ BAPPA FOUND ✨"}
           </motion.p>
 
           {/* Pandal name */}
           <motion.h2
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="font-display font-bold mb-4"
-            style={{ fontSize: "1.6rem", color: "var(--warm-cream)" }}
+            transition={{ delay: 0.3 }}
+            className="font-display font-bold mb-3"
+            style={{ fontSize: "1.45rem", color: "var(--warm-brown)" }}
           >
-            {pandalName.toUpperCase()}
+            {pandalName}
           </motion.h2>
 
-          {/* Score */}
+          {/* Score Badge */}
           {showScore && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 400 }}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-4 font-bold"
+              transition={{ type: "spring", stiffness: 450, damping: 20 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-3 font-bold text-sm"
               style={{
-                background: "linear-gradient(135deg, rgba(255,107,0,0.2), rgba(201,147,58,0.2))",
+                background: "linear-gradient(135deg, #FFE8D2, #FCE0DC)",
                 border: "1.5px solid var(--saffron)",
-                color: "var(--saffron)",
+                color: "var(--saffron-dark)",
               }}
             >
               <span>+{scoreEarned}</span>
-              <span style={{ color: "var(--muted-gold)" }}>BAPPA SCORE</span>
+              <span style={{ color: "var(--warm-brown)", fontSize: "0.8rem" }}>BAPPA XP</span>
             </motion.div>
           )}
 
@@ -143,37 +149,36 @@ export default function DiscoveryAnimation({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mb-4"
+              transition={{ delay: 0.7 }}
+              className="mb-3"
             >
               {newAchievements.map((key) => (
-                <div key={key} className="achievement-badge justify-center mb-2">
-                  🏆 Achievement Unlocked: {key.replace(/_/g, " ").toUpperCase()}
+                <div key={key} className="achievement-badge justify-center text-xs py-2 px-3 mb-1.5">
+                  🏆 Unlocked: {key.replace(/_/g, " ").toUpperCase()}
                 </div>
               ))}
             </motion.div>
           )}
 
-          {/* Morya! */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="font-display font-bold text-2xl mb-6"
-            style={{ color: "var(--muted-gold)" }}
+            transition={{ delay: 0.5 }}
+            className="font-display font-bold text-xl mb-5"
+            style={{ color: "var(--muted-gold-dark)" }}
           >
-            🐘 MORYA!
+            GANPATI BAPPA MORYA! 🌸
           </motion.p>
 
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
+            transition={{ delay: 0.9 }}
             id="dismiss-discovery"
-            className="btn-secondary w-full"
+            className="btn-primary w-full text-sm font-bold"
             onClick={onDismiss}
           >
-            Continue Exploring →
+            Continue Journey →
           </motion.button>
         </motion.div>
       </motion.div>

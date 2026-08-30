@@ -13,6 +13,7 @@ interface AddPandalSheetProps {
 }
 
 interface DuplicateInfo {
+  confirmationToken: string;
   id: string;
   name: string;
   distance: number;
@@ -123,6 +124,7 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
       if (!res.ok) {
         if (data.duplicate) {
           setDuplicate({
+            confirmationToken: data.confirmationToken,
             id: data.suggestedPandal.id,
             name: data.suggestedPandal.name,
             distance: Math.round(data.suggestedPandal.distance),
@@ -154,7 +156,7 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
       formData.append("longitude", String(lng!));
       formData.append("city", city || "Unknown");
       formData.append("photo", photoFile!);
-      formData.append("skipDuplicateCheck", "true");
+      formData.append("duplicateConfirmationToken", duplicate?.confirmationToken || "");
 
       const res = await fetch("/api/pandals", {
         method: "POST",
@@ -167,6 +169,7 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
       if (!res.ok) {
         if (data.duplicate) {
           setDuplicate({
+            confirmationToken: data.confirmationToken,
             id: data.suggestedPandal.id,
             name: data.suggestedPandal.name,
             distance: Math.round(data.suggestedPandal.distance),
@@ -218,15 +221,15 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               exit={{ opacity: 0, x: -20 }}
               className="text-center mb-6"
             >
-              <p className="text-5xl mb-4">🐘</p>
-              <h2 className="font-display font-bold text-xl mb-2" style={{ color: "var(--warm-cream)" }}>
-                FOUND A NEW BAPPA?
+              <p className="text-5xl mb-3">🐘</p>
+              <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
+                Found a New Bappa?
               </h2>
-              <p className="text-sm mb-6" style={{ color: "var(--fog-gray)" }}>
-                Know a Ganpati pandal that&apos;s missing from the map? Help other explorers find it.
+              <p className="text-xs max-w-xs mx-auto mb-6 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
+                Know a Ganpati pandal that&apos;s missing from the map? Add it so other explorers in your city can discover it.
               </p>
-              <button onClick={() => setStep("location")} className="btn-primary w-full" id="add-pandal-start-btn">
-                🐘 ADD PANDAAL
+              <button onClick={() => setStep("location")} className="btn-primary w-full text-xs font-bold" id="add-pandal-start-btn">
+                🐘 START PANDAL SUBMISSION
               </button>
             </motion.div>
           )}
@@ -238,40 +241,40 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <p className="text-xs font-bold tracking-[0.15em] uppercase mb-3" style={{ color: "var(--muted-gold)" }}>
-                📍 LOCATION
+              <p className="text-xs font-extrabold tracking-[0.15em] uppercase mb-2" style={{ color: "var(--saffron-dark)" }}>
+                STEP 1 • 📍 LOCATION
               </p>
               <div
-                className="mb-5 p-4 rounded-xl"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border-cream)" }}
+                className="mb-5 p-4 rounded-2xl"
+                style={{ background: "#FFE8D2", border: "1px solid var(--border-gold)" }}
               >
                 {!lat ? (
-                  <div className="text-center py-6">
-                    <p className="text-3xl mb-3">📍</p>
-                    <p className="text-sm font-bold mb-2" style={{ color: "var(--warm-cream)" }}>
-                      We need your location to add this pandal to the map.
+                  <div className="text-center py-4">
+                    <p className="text-3xl mb-2">📍</p>
+                    <p className="text-xs font-bold mb-3" style={{ color: "var(--warm-brown)" }}>
+                      Capture the exact coordinates of this pandal.
                     </p>
-                    <button onClick={handleLocationCapture} className="btn-primary w-full mt-3" id="capture-location-btn">
-                      📍 ENABLE LOCATION
+                    <button onClick={handleLocationCapture} className="btn-primary w-full text-xs font-bold" id="capture-location-btn">
+                      📍 CAPTURE CURRENT LOCATION
                     </button>
                   </div>
                 ) : (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold" style={{ color: "var(--saffron)" }}>
-                        📍 Location captured
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold" style={{ color: "var(--saffron-dark)" }}>
+                        📍 Location Captured
                       </span>
-                      <span className="text-xs" style={{ color: "#4ADE80" }}>✓</span>
+                      <span className="text-xs font-bold" style={{ color: "var(--success)" }}>✓ Ready</span>
                     </div>
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--warm-cream)" }}>
-                      {city || "Unknown location"}
+                    <p className="text-sm font-bold mb-1" style={{ color: "var(--warm-brown)" }}>
+                      {city || "Current Area"}
                     </p>
                     {accuracy && (
-                      <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                        Accuracy: ~{Math.round(accuracy)}m
+                      <p className="text-[11px]" style={{ color: "var(--muted-brown)" }}>
+                        GPS Accuracy: ~{Math.round(accuracy)}m
                       </p>
                     )}
-                    <p className="text-xs mt-1" style={{ color: "var(--fog-gray)" }}>
+                    <p className="text-[10px] mt-1" style={{ color: "var(--muted-brown)" }}>
                       {lat.toFixed(6)}, {lng != null ? lng.toFixed(6) : "..."}
                     </p>
                   </div>
@@ -279,15 +282,15 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep("confirm")} className="btn-secondary flex-1">
+                <button onClick={() => setStep("confirm")} className="btn-secondary flex-1 text-xs font-bold">
                   Back
                 </button>
                 <button
                   onClick={() => setStep("photo")}
                   disabled={!lat}
-                  className="btn-primary flex-1 disabled:opacity-50"
+                  className="btn-primary flex-1 text-xs font-bold disabled:opacity-50"
                 >
-                  Continue
+                  Continue →
                 </button>
               </div>
             </motion.div>
@@ -300,31 +303,31 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <p className="text-xs font-bold tracking-[0.15em] uppercase mb-3" style={{ color: "var(--muted-gold)" }}>
-                📸 PHOTO
+              <p className="text-xs font-extrabold tracking-[0.15em] uppercase mb-2" style={{ color: "var(--saffron-dark)" }}>
+                STEP 2 • 📸 PANDAL PHOTO
               </p>
               <div
-                className="mb-5 p-4 rounded-xl text-center"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border-cream)" }}
+                className="mb-5 p-5 rounded-2xl text-center"
+                style={{ background: "#FFE8D2", border: "1px solid var(--border-gold)" }}
               >
-                <p className="text-3xl mb-3">📸</p>
-                <p className="text-sm font-bold mb-1" style={{ color: "var(--warm-cream)" }}>
-                  Show us the Bappa
+                <p className="text-3xl mb-2">📸</p>
+                <p className="text-sm font-bold mb-1" style={{ color: "var(--warm-brown)" }}>
+                  Show us the Bappa setup
                 </p>
-                <p className="text-xs mb-4" style={{ color: "var(--fog-gray)" }}>
-                  Take a photo so other explorers know what they&apos;re looking for.
+                <p className="text-xs mb-4" style={{ color: "var(--muted-brown)" }}>
+                  Take a photo so other explorers recognize the pandal when nearby.
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => cameraInputRef.current?.click()}
-                    className="btn-primary flex-1"
+                    className="btn-primary flex-1 text-xs font-bold"
                     id="pandal-camera-btn"
                   >
                     📸 TAKE PHOTO
                   </button>
                   <button
                     onClick={() => galleryInputRef.current?.click()}
-                    className="btn-secondary flex-1"
+                    className="btn-secondary flex-1 text-xs font-bold"
                     id="pandal-gallery-btn"
                   >
                     🖼️ GALLERY
@@ -354,7 +357,7 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep("location")} className="btn-secondary flex-1">
+                <button onClick={() => setStep("location")} className="btn-secondary flex-1 text-xs font-bold">
                   Back
                 </button>
               </div>
@@ -368,14 +371,14 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <p className="text-xs font-bold tracking-[0.15em] uppercase mb-3" style={{ color: "var(--muted-gold)" }}>
-                PANDAAL DETAILS
+              <p className="text-xs font-extrabold tracking-[0.15em] uppercase mb-2" style={{ color: "var(--saffron-dark)" }}>
+                STEP 3 • PANDAL DETAILS
               </p>
 
               {previewUrl && (
                 <div
-                  className="relative w-full aspect-video rounded-xl overflow-hidden mb-4"
-                  style={{ background: "var(--bg-card)" }}
+                  className="relative w-full aspect-video rounded-2xl overflow-hidden mb-4 shadow-sm"
+                  style={{ background: "#FFE8D2" }}
                 >
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
@@ -383,43 +386,43 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
 
               <div className="space-y-3 mb-5">
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: "var(--fog-gray)" }}>
-                    Name <span style={{ color: "var(--vermillion)" }}>*</span>
+                  <label className="block text-xs font-bold mb-1" style={{ color: "var(--warm-brown)" }}>
+                    Pandal Name <span style={{ color: "var(--vermillion)" }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ganesh Mitra Mandal"
-                    className="bappa-input"
+                    placeholder="e.g. Shree Ganesh Mitra Mandal"
+                    className="bappa-input text-xs"
                     id="pandal-name-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: "var(--fog-gray)" }}>
-                    Anything else?
+                  <label className="block text-xs font-bold mb-1" style={{ color: "var(--warm-brown)" }}>
+                    Description (Optional)
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Optional description..."
+                    placeholder="e.g. Beautiful eco-friendly idol with traditional dhol-tasha..."
                     rows={3}
-                    className="bappa-input resize-none"
+                    className="bappa-input resize-none text-xs"
                     id="pandal-desc-input"
                   />
                 </div>
-                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--fog-gray)" }}>
+                <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--muted-brown)" }}>
                   <span>📍</span>
-                  <span>Location automatically detected: {city || "Unknown"}</span>
+                  <span>Location detected: {city || "City Area"}</span>
                 </div>
               </div>
 
               {error && (
                 <div
-                  className="mb-4 p-3 rounded-xl text-xs"
+                  className="mb-4 p-3 rounded-xl text-xs font-semibold"
                   style={{
-                    background: "rgba(204, 34, 0, 0.1)",
-                    border: "1px solid rgba(204, 34, 0, 0.3)",
+                    background: "rgba(217, 72, 59, 0.1)",
+                    border: "1px solid rgba(217, 72, 59, 0.3)",
                     color: "var(--vermillion)",
                   }}
                 >
@@ -428,16 +431,16 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               )}
 
               <div className="flex gap-3">
-                <button onClick={() => setStep("photo")} className="btn-secondary flex-1">
+                <button onClick={() => setStep("photo")} className="btn-secondary flex-1 text-xs font-bold">
                   Back
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="btn-primary flex-1 disabled:opacity-50"
+                  className="btn-primary flex-1 text-xs font-bold disabled:opacity-50"
                   id="submit-pandal-btn"
                 >
-                  {submitting ? "Submitting..." : "Submit Pandal"}
+                  {submitting ? "Submitting..." : "Submit to Map 🌸"}
                 </button>
               </div>
             </motion.div>
@@ -451,39 +454,39 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               exit={{ opacity: 0, x: -20 }}
             >
               <div className="text-center mb-4">
-                <p className="text-4xl mb-3">🐘</p>
-                <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
-                  WAIT!
+                <p className="text-4xl mb-2">🐘</p>
+                <h2 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
+                  Similar Pandal Found Nearby
                 </h2>
-                <p className="text-sm mb-4" style={{ color: "var(--fog-gray)" }}>
-                  There&apos;s already a pandal very close to this location.
+                <p className="text-xs mb-3" style={{ color: "var(--muted-brown)" }}>
+                  There&apos;s already a pandal registered within {duplicate.distance}m.
                 </p>
                 <div
-                  className="p-4 rounded-xl text-left mb-4"
-                  style={{ background: "var(--bg-card)", border: "1px solid var(--border-gold)" }}
+                  className="p-3.5 rounded-2xl text-left mb-4"
+                  style={{ background: "#FFE8D2", border: "1px solid var(--border-gold)" }}
                 >
-                  <p className="text-sm font-bold mb-1" style={{ color: "var(--warm-cream)" }}>
+                  <p className="text-sm font-bold" style={{ color: "var(--warm-brown)" }}>
                     {duplicate.name}
                   </p>
-                  <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--muted-brown)" }}>
                     {duplicate.distance}m away
                   </p>
                 </div>
-                <p className="text-sm font-bold mb-4" style={{ color: "var(--saffron)" }}>
-                  Is this the same pandal?
+                <p className="text-xs font-bold mb-3" style={{ color: "var(--saffron-dark)" }}>
+                  Is your submission a different pandal?
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <button
                   onClick={() => window.open(`/pandals/${duplicate.id}`, "_blank")}
-                  className="btn-secondary w-full"
+                  className="btn-secondary w-full text-xs font-bold"
                   id="view-existing-pandal-btn"
                 >
                   View Existing Pandal
                 </button>
-                <button onClick={handleForceSubmit} className="btn-primary w-full" id="force-submit-btn">
-                  This is a Different Pandal
+                <button onClick={handleForceSubmit} className="btn-primary w-full text-xs font-bold" id="force-submit-btn">
+                  Yes, This is a Different Pandal
                 </button>
               </div>
             </motion.div>
@@ -495,46 +498,46 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="text-center"
+              className="text-center py-4"
             >
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-5xl mb-4"
+                className="text-5xl mb-3"
               >
-                ✨
+                🎉
               </motion.div>
               <p
-                className="text-xs font-bold tracking-[0.15em] uppercase mb-2"
-                style={{ color: "var(--saffron)" }}
+                className="text-xs font-extrabold tracking-[0.15em] uppercase mb-1"
+                style={{ color: "var(--saffron-dark)" }}
               >
-                BAPPA DISCOVERED!
+                PANDAL ADDED!
               </p>
-              <p className="text-sm mb-2" style={{ color: "var(--fog-gray)" }}>
-                You just found a pandal that wasn&apos;t on the map.
-              </p>
-              <p className="text-sm mb-4" style={{ color: "var(--fog-gray)" }}>
-                Your submission is now waiting for verification.
+              <h3 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
+                You Found a New Bappa!
+              </h3>
+              <p className="text-xs max-w-xs mx-auto mb-5 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
+                Your pandal submission will be live on the map for all explorers once reviewed.
               </p>
 
               <div
-                className="mb-5 p-4 rounded-xl"
+                className="mb-5 p-4 rounded-2xl"
                 style={{
-                  background: "rgba(201, 147, 58, 0.08)",
+                  background: "#FFE8D2",
                   border: "1px solid var(--border-gold)",
                 }}
               >
-                <p className="text-2xl mb-2">🏆</p>
-                <p className="text-sm font-bold mb-1" style={{ color: "var(--muted-gold-light)" }}>
-                  PANDAL PIONEER
+                <p className="text-2xl mb-1">🌟</p>
+                <p className="text-sm font-bold" style={{ color: "var(--warm-brown)" }}>
+                  + Pandal Pioneer XP
                 </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  You&apos;ll get credit when the pandal is approved.
+                <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+                  Earn bonus score points when approved.
                 </p>
               </div>
 
-              <button onClick={handleDone} className="btn-primary w-full" id="pandal-success-done-btn">
-                Back to Map
+              <button onClick={handleDone} className="btn-primary w-full text-xs font-bold" id="pandal-success-done-btn">
+                Back to Bappa Map 🗺️
               </button>
             </motion.div>
           )}

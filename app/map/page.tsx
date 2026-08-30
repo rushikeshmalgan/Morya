@@ -22,7 +22,7 @@ const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
   loading: () => (
     <div
       className="w-full h-full flex items-center justify-center"
-      style={{ background: "var(--bg-primary)" }}
+      style={{ background: "#FFF4E3" }}
     >
       <div className="text-center">
         <motion.div
@@ -32,7 +32,9 @@ const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
         >
           🐘
         </motion.div>
-        <p style={{ color: "var(--fog-gray)" }}>Loading Bappa Map...</p>
+        <p className="text-sm font-semibold" style={{ color: "var(--muted-brown)" }}>
+          Loading Bappa Map...
+        </p>
       </div>
     </div>
   ),
@@ -83,15 +85,15 @@ export default function MapPage() {
   const [locationDenied, setLocationDenied] = useState(false);
   const [flow, setFlow] = useState<FlowStep>({ phase: "map" });
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
-  const [pendingPhotoPreview, setPendingPhotoPreview] = useState<string>("");
+  const [_pendingPhotoPreview, setPendingPhotoPreview] = useState<string>("");
   const [photoUploading, setPhotoUploading] = useState(false);
-  const [photoError, setPhotoError] = useState("");
+  const [_photoError, setPhotoError] = useState("");
 
   const watchIdRef = useRef<number | null>(null);
   const fetchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Demo location — Lalbaug, Mumbai (for demo mode)
-  const DEMO_LOCATION = { lat: 18.5196, lng: 73.8553 }; // Pune, Kasba area
+  // Demo location — Kasba Ganpati area, Pune
+  const DEMO_LOCATION = { lat: 18.5196, lng: 73.8553 };
 
   useEffect(() => {
     const stored = getStoredUser();
@@ -349,7 +351,7 @@ export default function MapPage() {
   const closestInRange = nearbyPandals.find((p) => p.state === "in_range");
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ background: "var(--bg-primary)" }}>
+    <div className="fixed inset-0 overflow-hidden" style={{ background: "#FFF4E3" }}>
       {/* ── THE MAP ── */}
       {userLocation && flow.phase === "map" && (
         <BappaMap
@@ -361,62 +363,79 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── TOP HUD ── */}
+      {/* ── TOP FLOATING PLAYER CARD ── */}
       {flow.phase === "map" && (
-        <div className="fixed top-0 left-0 right-0 z-10 p-4 safe-top">
-          <div className="flex items-center justify-between max-w-md mx-auto">
-            {/* User chip */}
+        <div className="fixed top-0 left-0 right-0 z-20 p-4 safe-top pointer-events-none">
+          <div className="flex items-center justify-between max-w-md mx-auto pointer-events-auto">
+            {/* Identity Card */}
             {user && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card px-3 py-2 flex items-center gap-2"
+                className="glass-card px-3.5 py-2 flex items-center gap-2.5"
+                style={{ background: "rgba(255, 249, 241, 0.94)", border: "1px solid rgba(216,169,74,0.3)" }}
               >
-                <span className="text-sm">🐘</span>
+                <span className="text-xl">🐘</span>
                 <div>
-                  <p className="text-xs font-bold" style={{ color: "var(--muted-gold-light)" }}>
+                  <p className="text-xs font-bold leading-none" style={{ color: "var(--warm-brown)" }}>
                     {user.generatedName}
                   </p>
-                  <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-brown)" }}>
                     #{user.generatedNumber}
                   </p>
                 </div>
               </motion.div>
             )}
 
-            {/* Score */}
+            {/* Score & Collection stats */}
             {user && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="glass-card px-3 py-2 text-center"
+                className="glass-card px-3.5 py-2 flex items-center gap-3"
+                style={{ background: "rgba(255, 249, 241, 0.94)", border: "1px solid rgba(216,169,74,0.3)" }}
               >
-                <p className="text-xs font-bold" style={{ color: "var(--saffron)" }}>
-                  {user.uniquePandals} 🐘
-                </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  {user.score} pts
-                </p>
+                <div className="text-center">
+                  <p className="text-xs font-extrabold" style={{ color: "var(--saffron-dark)" }}>
+                    {user.uniquePandals} 🐘
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
+                    Pandals
+                  </p>
+                </div>
+                <div className="w-[1px] h-5" style={{ background: "rgba(120,80,50,0.15)" }} />
+                <div className="text-center">
+                  <p className="text-xs font-extrabold" style={{ color: "var(--muted-gold-dark)" }}>
+                    ⭐ {user.score}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
+                    XP
+                  </p>
+                </div>
               </motion.div>
             )}
           </div>
         </div>
       )}
 
-      {/* ── ADD PANDAAL FAB ── */}
+      {/* ── ADD PANDAAL FLOATING ACTION BUTTON ── */}
       {flow.phase === "map" && (
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
+          transition={{ delay: 0.4, type: "spring" }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleAddPandal}
-          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg"
+          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-xl"
           style={{
-            background: "linear-gradient(135deg, var(--saffron), var(--saffron-dark))",
-            border: "2px solid rgba(255,255,255,0.2)",
+            background: "linear-gradient(135deg, #E9784F, #E0673B)",
+            border: "2.5px solid #FFFFFF",
+            boxShadow: "0 8px 25px rgba(233, 120, 79, 0.45)",
           }}
           id="add-pandal-fab"
+          title="Add a Pandal"
         >
           🐘
         </motion.button>
@@ -424,7 +443,7 @@ export default function MapPage() {
 
       {/* ── DEMO BANNER ── */}
       {isDemo && flow.phase === "map" && (
-        <div className="fixed top-16 left-0 right-0 z-10 flex justify-center pointer-events-none safe-top">
+        <div className="fixed top-16 left-0 right-0 z-20 flex justify-center pointer-events-none safe-top">
           <div className="demo-banner">🎮 DEMO MODE — GPS verification disabled</div>
         </div>
       )}
@@ -432,14 +451,14 @@ export default function MapPage() {
       {/* ── LOCATION DENIED BANNER ── */}
       {locationDenied && !isDemo && flow.phase === "map" && (
         <div
-          className="fixed top-16 left-0 right-0 z-10 mx-4 p-3 text-xs text-center rounded-lg"
+          className="fixed top-16 left-0 right-0 z-20 mx-4 p-3 text-xs text-center rounded-xl shadow-md"
           style={{
-            background: "rgba(204, 34, 0, 0.15)",
-            border: "1px solid rgba(204, 34, 0, 0.4)",
-            color: "var(--warm-cream)",
+            background: "#FFE8D2",
+            border: "1px solid var(--border-gold)",
+            color: "var(--warm-brown)",
           }}
         >
-          📍 Location unavailable — showing Pune. Enable location to discover real pandals.
+          📍 Location access unavailable — Showing Pune pandals. Enable GPS to explore nearby.
         </div>
       )}
 
@@ -449,39 +468,42 @@ export default function MapPage() {
           {closestInRange && !selectedPandal && !discoveryResult && (
             <motion.div
               key="in-range"
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
+              exit={{ opacity: 0, y: 40 }}
               className="fixed left-4 right-4 z-20"
-              style={{ bottom: "90px" }}
+              style={{ bottom: "88px" }}
             >
               <button
                 id="bappa-detected-btn"
                 onClick={() => handlePandalTap(closestInRange)}
-                className="w-full p-4 rounded-2xl text-left"
+                className="w-full p-4 rounded-2xl text-left shadow-lg"
                 style={{
-                  background: "linear-gradient(135deg, rgba(255,107,0,0.3), rgba(201,147,58,0.2))",
-                  border: "1.5px solid var(--saffron)",
+                  background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)",
+                  border: "2px solid var(--saffron)",
+                  boxShadow: "var(--shadow-warm)",
                 }}
               >
                 <div className="flex items-center gap-3">
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
+                    animate={{ scale: [1, 1.25, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
                     className="text-2xl"
                   >
                     🐘
                   </motion.div>
                   <div>
-                    <p className="font-bold text-sm" style={{ color: "var(--saffron)" }}>
-                      BAPPA WITHIN RANGE!
+                    <p className="font-extrabold text-xs tracking-wider uppercase" style={{ color: "var(--saffron-dark)" }}>
+                      BAPPA WITHIN REACH!
                     </p>
-                    <p className="text-xs" style={{ color: "var(--warm-cream)" }}>
+                    <p className="text-sm font-bold" style={{ color: "var(--warm-brown)" }}>
                       {closestInRange.name === "???" ? "Unknown Pandal" : closestInRange.name} •{" "}
-                      {formatDistance(closestInRange.distance)} away
+                      {formatDistance(closestInRange.distance)}
                     </p>
                   </div>
-                  <div className="ml-auto text-saffron text-xl">→</div>
+                  <div className="ml-auto text-xl font-bold" style={{ color: "var(--saffron-dark)" }}>
+                    →
+                  </div>
                 </div>
               </button>
             </motion.div>
@@ -489,17 +511,17 @@ export default function MapPage() {
         </AnimatePresence>
       )}
 
-      {/* ── QUEST CARD ── */}
+      {/* ── COMPACT QUEST CARD ── */}
       {flow.phase === "map" && (
         <AnimatePresence>
           {showQuest && activeQuest && !selectedPandal && !discoveryResult && !closestInRange && (
             <motion.div
               key="quest"
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
+              exit={{ opacity: 0, y: 40 }}
               className="fixed left-4 right-4 z-20"
-              style={{ bottom: "90px" }}
+              style={{ bottom: "88px" }}
             >
               <QuestCard quest={activeQuest} onDismiss={() => setShowQuest(false)} />
             </motion.div>
@@ -523,7 +545,7 @@ export default function MapPage() {
         </AnimatePresence>
       )}
 
-      {/* ── DISCOVERY ANIMATION ── */}
+      {/* ── DISCOVERY CELEBRATION MOMENT ── */}
       {flow.phase === "discovery" && discoveryResult && (
         <DiscoveryAnimation
           pandalName={discoveryResult.pandalName}

@@ -11,25 +11,33 @@ interface PendingPandal {
   description: string | null;
   latitude: number;
   longitude: number;
-  city: string;
   address: string | null;
+  city: string;
   status: string;
-  submittedBy: string | null;
-  isNew: boolean;
-  isRare: boolean;
   createdAt: string;
   photos: { imageUrl: string }[];
-  submitter?: { generatedName: string; generatedNumber: number };
+  submitter?: {
+    id: string;
+    generatedName: string;
+    generatedNumber: number;
+  } | null;
 }
 
 interface PendingPhoto {
   id: string;
   imageUrl: string;
-  moderationStatus: string;
   category: string;
+  moderationStatus: string;
   createdAt: string;
   user: { generatedName: string; generatedNumber: number };
   pandal: { name: string; city: string };
+}
+
+interface AdminStats {
+  pendingPandals: number;
+  approvedPandals: number;
+  pendingPhotos: number;
+  totalUsers: number;
 }
 
 export default function AdminPage() {
@@ -40,8 +48,8 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("pandals");
   const [pendingPandals, setPendingPandals] = useState<PendingPandal[]>([]);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
-  const [stats, setStats] = useState({ pendingPandals: 0, approvedPandals: 0, pendingPhotos: 0, totalUsers: 0 });
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<AdminStats>({ pendingPandals: 0, approvedPandals: 0, pendingPhotos: 0, totalUsers: 0 });
+  const [loading, setLoading] = useState(false);
   const [selectedPandal, setSelectedPandal] = useState<PendingPandal | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<PendingPhoto | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -69,10 +77,15 @@ export default function AdminPage() {
 
   const proxyFetch = async (action: string, method = "GET", body?: Record<string, unknown>) => {
     const params = new URLSearchParams({ action });
+    if (method === "GET" && body) {
+      for (const [key, value] of Object.entries(body)) {
+        if (value !== undefined && value !== null) params.set(key, String(value));
+      }
+    }
     const res = await fetch(`/api/admin/proxy?${params}`, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : undefined,
+      body: method === "GET" ? undefined : body ? JSON.stringify(body) : undefined,
     });
     return res;
   };
@@ -108,8 +121,11 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (authenticated) {
+      fetchData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated]);
 
   const handleApprovePandal = async (pandalId: string) => {
     setActionLoading(true);
@@ -178,14 +194,14 @@ export default function AdminPage() {
   if (!authenticated) {
     return (
       <div className="min-h-screen mandala-bg flex items-center justify-center p-6">
-        <form onSubmit={handleLogin} className="w-full max-w-sm bappa-card p-6">
+        <form onSubmit={handleLogin} className="w-full max-w-sm bappa-card p-6" style={{ background: "#FFF9F1" }}>
           <div className="text-center mb-6">
             <p className="text-4xl mb-3">🔒</p>
-            <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-cream)" }}>
+            <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-brown)" }}>
               ADMIN ACCESS
             </h1>
-            <p className="text-xs mt-2" style={{ color: "var(--fog-gray)" }}>
-              Internal use only
+            <p className="text-xs mt-1" style={{ color: "var(--muted-brown)" }}>
+              Internal Moderation Dashboard
             </p>
           </div>
           <input
@@ -193,13 +209,13 @@ export default function AdminPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter admin password"
-            className="bappa-input mb-3"
+            className="bappa-input mb-3 text-xs"
             autoFocus
           />
           {loginError && (
-            <p className="text-xs mb-3" style={{ color: "var(--vermillion)" }}>{loginError}</p>
+            <p className="text-xs mb-3 font-semibold" style={{ color: "var(--vermillion)" }}>{loginError}</p>
           )}
-          <button type="submit" className="btn-primary w-full">
+          <button type="submit" className="btn-primary w-full text-xs font-bold">
             ACCESS DASHBOARD
           </button>
         </form>
@@ -212,7 +228,7 @@ export default function AdminPage() {
       <div className="min-h-screen mandala-bg flex items-center justify-center">
         <div className="text-center">
           <div className="text-5xl mb-4 animate-pulse">🐘</div>
-          <p style={{ color: "var(--fog-gray)" }}>Loading admin dashboard...</p>
+          <p className="text-xs font-bold" style={{ color: "var(--muted-brown)" }}>Loading moderation dashboard...</p>
         </div>
       </div>
     );
@@ -221,49 +237,49 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen mandala-bg pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 pt-12 pb-4 safe-top" style={{ background: "rgba(15,11,8,0.95)", backdropFilter: "blur(12px)" }}>
+      <div className="sticky top-0 z-10 px-4 pt-10 pb-4 safe-top" style={{ background: "rgba(255,249,241,0.96)", backdropFilter: "blur(12px)" }}>
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🐘</span>
             <div>
-              <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-cream)" }}>
+              <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-brown)" }}>
                 BAPPA MODE ADMIN
               </h1>
-              <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                Internal Moderation Dashboard
+              <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+                Pandal & Photo Moderation
               </p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="bappa-card p-3 text-center">
-              <p className="text-xs font-bold" style={{ color: "var(--muted-gold)" }}>PENDING PANDAALS</p>
-              <p className="text-2xl font-bold" style={{ color: "var(--saffron)" }}>{stats.pendingPandals}</p>
+            <div className="bappa-card p-3 text-center" style={{ background: "#FFE8D2" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>PENDING PANDALS</p>
+              <p className="text-xl font-bold" style={{ color: "var(--saffron-dark)" }}>{stats.pendingPandals}</p>
             </div>
-            <div className="bappa-card p-3 text-center">
-              <p className="text-xs font-bold" style={{ color: "var(--muted-gold)" }}>APPROVED PANDAALS</p>
-              <p className="text-2xl font-bold" style={{ color: "#4ADE80" }}>{stats.approvedPandals}</p>
+            <div className="bappa-card p-3 text-center" style={{ background: "#FFE8D2" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>APPROVED PANDALS</p>
+              <p className="text-xl font-bold" style={{ color: "var(--success)" }}>{stats.approvedPandals}</p>
             </div>
-            <div className="bappa-card p-3 text-center">
-              <p className="text-xs font-bold" style={{ color: "var(--muted-gold)" }}>PENDING PHOTOS</p>
-              <p className="text-2xl font-bold" style={{ color: "var(--saffron)" }}>{stats.pendingPhotos}</p>
+            <div className="bappa-card p-3 text-center" style={{ background: "#FFE8D2" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>PENDING PHOTOS</p>
+              <p className="text-xl font-bold" style={{ color: "var(--saffron-dark)" }}>{stats.pendingPhotos}</p>
             </div>
-            <div className="bappa-card p-3 text-center">
-              <p className="text-xs font-bold" style={{ color: "var(--muted-gold)" }}>TOTAL USERS</p>
-              <p className="text-2xl font-bold" style={{ color: "var(--warm-cream)" }}>{stats.totalUsers.toLocaleString()}</p>
+            <div className="bappa-card p-3 text-center" style={{ background: "#FFE8D2" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>TOTAL USERS</p>
+              <p className="text-xl font-bold" style={{ color: "var(--warm-brown)" }}>{stats.totalUsers.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 p-1 rounded-2xl bappa-card" style={{ background: "#FFF9F1" }}>
             <button
               onClick={() => setActiveTab("pandals")}
               className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
               style={
                 activeTab === "pandals"
-                  ? { background: "var(--saffron)", color: "white" }
-                  : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }
+                  ? { background: "linear-gradient(135deg, #E9784F, #E0673B)", color: "white" }
+                  : { color: "var(--muted-brown)" }
               }
             >
               🐘 Pandals ({pendingPandals.length})
@@ -273,8 +289,8 @@ export default function AdminPage() {
               className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
               style={
                 activeTab === "photos"
-                  ? { background: "var(--saffron)", color: "white" }
-                  : { background: "var(--bg-card)", color: "var(--fog-gray)", border: "1px solid var(--border-cream)" }
+                  ? { background: "linear-gradient(135deg, #E9784F, #E0673B)", color: "white" }
+                  : { color: "var(--muted-brown)" }
               }
             >
               📸 Photos ({pendingPhotos.length})
@@ -285,7 +301,7 @@ export default function AdminPage() {
 
       <div className="max-w-md mx-auto px-4 pt-4">
         {error && (
-          <div className="mb-4 p-3 rounded-xl text-xs" style={{ background: "rgba(204,34,0,0.1)", border: "1px solid rgba(204,34,0,0.3)", color: "var(--vermillion)" }}>
+          <div className="mb-4 p-3 rounded-xl text-xs" style={{ background: "rgba(217,72,59,0.1)", border: "1px solid rgba(217,72,59,0.3)", color: "var(--vermillion)" }}>
             {error}
           </div>
         )}
@@ -294,13 +310,13 @@ export default function AdminPage() {
         {activeTab === "pandals" && (
           <>
             {pendingPandals.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">✅</div>
-                <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
+              <div className="text-center py-14 bappa-card p-6">
+                <div className="text-4xl mb-3">✅</div>
+                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
                   All Caught Up!
                 </h3>
-                <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                  No pending pandals to review.
+                <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+                  No pending pandals to review right now.
                 </p>
               </div>
             ) : (
@@ -310,31 +326,28 @@ export default function AdminPage() {
                     key={pandal.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="bappa-card p-4 cursor-pointer"
+                    transition={{ delay: i * 0.04 }}
+                    className="bappa-card p-3.5 cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => setSelectedPandal(pandal)}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                       {pandal.photos[0] && (
-                        <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden">
+                        <div className="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden" style={{ background: "#FFE8D2" }}>
                           <img src={pandal.photos[0].imageUrl} alt="" className="w-full h-full object-cover" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-sm truncate" style={{ color: "var(--warm-cream)" }}>
+                        <h3 className="font-bold text-sm truncate" style={{ color: "var(--warm-brown)" }}>
                           {pandal.name}
                         </h3>
-                        <p className="text-xs mt-1" style={{ color: "var(--fog-gray)" }}>
+                        <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
                           📍 {pandal.city}
                         </p>
                         {pandal.submitter && (
-                          <p className="text-xs mt-1" style={{ color: "var(--fog-gray)" }}>
+                          <p className="text-[11px]" style={{ color: "var(--muted-brown)" }}>
                             By: {pandal.submitter.generatedName} #{pandal.submitter.generatedNumber}
                           </p>
                         )}
-                        <p className="text-xs mt-1" style={{ color: "var(--fog-gray)", opacity: 0.7 }}>
-                          {new Date(pandal.createdAt).toLocaleDateString("en-IN")}
-                        </p>
                       </div>
                     </div>
                   </motion.div>
@@ -348,13 +361,13 @@ export default function AdminPage() {
         {activeTab === "photos" && (
           <>
             {pendingPhotos.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">✅</div>
-                <h3 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
+              <div className="text-center py-14 bappa-card p-6">
+                <div className="text-4xl mb-3">✅</div>
+                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
                   All Caught Up!
                 </h3>
-                <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                  No pending photos to review.
+                <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
+                  No pending photos to review right now.
                 </p>
               </div>
             ) : (
@@ -364,14 +377,14 @@ export default function AdminPage() {
                     key={photo.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.04 }}
                     className="photo-card cursor-pointer"
                     onClick={() => setSelectedPhoto(photo)}
                   >
                     <img src={photo.imageUrl} alt="" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                      <p className="text-xs font-medium text-white truncate">{photo.pandal.name}</p>
-                      <p className="text-[10px] text-white/70">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-2.5 text-white">
+                      <p className="text-xs font-bold truncate">{photo.pandal.name}</p>
+                      <p className="text-[10px] opacity-80 truncate">
                         {photo.user.generatedName} #{photo.user.generatedNumber}
                       </p>
                     </div>
@@ -390,79 +403,61 @@ export default function AdminPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+            className="bottom-sheet-overlay flex items-end justify-center"
+            onClick={() => setSelectedPandal(null)}
           >
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl p-6 max-h-[90dvh] overflow-y-auto"
+              className="bottom-sheet"
+              style={{ paddingBottom: "32px" }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-gray-300 dark:bg-zinc-600 rounded-full mx-auto mb-4" />
+              <div className="bottom-sheet-handle" />
 
               {selectedPandal.photos[0] && (
-                <div className="w-full aspect-video rounded-xl overflow-hidden mb-4">
+                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4 shadow-sm" style={{ background: "#FFE8D2" }}>
                   <img src={selectedPandal.photos[0].imageUrl} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
 
-              <h2 className="font-display font-bold text-xl mb-2" style={{ color: "var(--warm-cream)" }}>
+              <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
                 {selectedPandal.name}
               </h2>
 
               {selectedPandal.description && (
-                <p className="text-sm mb-3" style={{ color: "var(--fog-gray)" }}>
+                <p className="text-xs mb-3 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
                   {selectedPandal.description}
                 </p>
               )}
 
-              <div className="space-y-2 mb-5">
-                <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                  📍 {selectedPandal.city}
-                </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  Coordinates: {selectedPandal.latitude.toFixed(6)}, {selectedPandal.longitude.toFixed(6)}
-                </p>
-                {selectedPandal.address && (
-                  <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                    Address: {selectedPandal.address}
-                  </p>
+              <div className="space-y-1.5 mb-5 text-xs" style={{ color: "var(--muted-brown)" }}>
+                <p>📍 City: <strong style={{ color: "var(--warm-brown)" }}>{selectedPandal.city}</strong></p>
+                <p>Coordinates: {selectedPandal.latitude.toFixed(6)}, {selectedPandal.longitude.toFixed(6)}</p>
+                {selectedPandal.submitter && (
+                  <p>Submitted By: {selectedPandal.submitter.generatedName} #{selectedPandal.submitter.generatedNumber}</p>
                 )}
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  Submitted: {new Date(selectedPandal.createdAt).toLocaleString("en-IN")}
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs" style={{ color: "var(--fog-gray)" }}>Status:</span>
-                  <span className="bappa-pill">{selectedPandal.status}</span>
-                </div>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => handleApprovePandal(selectedPandal.id)}
                   disabled={actionLoading}
-                  className="flex-1 btn-primary disabled:opacity-50"
+                  className="flex-1 btn-primary text-xs font-bold disabled:opacity-50"
                 >
-                  ✓ APPROVE
+                  ✓ APPROVE PANDAL
                 </button>
                 <button
                   onClick={() => handleRejectPandal(selectedPandal.id)}
                   disabled={actionLoading}
-                  className="flex-1 btn-secondary disabled:opacity-50"
-                  style={{ borderColor: "var(--vermillion)", color: "var(--vermillion)" }}
+                  className="flex-1 btn-secondary text-xs font-bold disabled:opacity-50"
+                  style={{ color: "var(--vermillion)", borderColor: "var(--vermillion)" }}
                 >
                   ✕ REJECT
                 </button>
               </div>
-
-              <button
-                onClick={() => setSelectedPandal(null)}
-                className="w-full mt-3 py-2 text-sm"
-                style={{ color: "var(--fog-gray)" }}
-              >
-                Cancel
-              </button>
             </motion.div>
           </motion.div>
         )}
@@ -475,69 +470,48 @@ export default function AdminPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+            className="bottom-sheet-overlay flex items-end justify-center"
+            onClick={() => setSelectedPhoto(null)}
           >
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl p-6 max-h-[90dvh] overflow-y-auto"
+              className="bottom-sheet"
+              style={{ paddingBottom: "32px" }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-12 h-1 bg-gray-300 dark:bg-zinc-600 rounded-full mx-auto mb-4" />
+              <div className="bottom-sheet-handle" />
 
-              <div className="w-full aspect-square rounded-xl overflow-hidden mb-4">
+              <div className="w-full aspect-square rounded-2xl overflow-hidden mb-4 shadow-sm" style={{ background: "#FFE8D2" }}>
                 <img src={selectedPhoto.imageUrl} alt="" className="w-full h-full object-cover" />
               </div>
 
-              <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--warm-cream)" }}>
+              <h2 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
                 {selectedPhoto.pandal.name}
               </h2>
-
-              <div className="space-y-2 mb-5">
-                <p className="text-sm" style={{ color: "var(--fog-gray)" }}>
-                  📍 {selectedPhoto.pandal.city}
-                </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  By: {selectedPhoto.user.generatedName} #{selectedPhoto.user.generatedNumber}
-                </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  Category: {selectedPhoto.category.replace(/_/g, " ")}
-                </p>
-                <p className="text-xs" style={{ color: "var(--fog-gray)" }}>
-                  Submitted: {new Date(selectedPhoto.createdAt).toLocaleString("en-IN")}
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs" style={{ color: "var(--fog-gray)" }}>Status:</span>
-                  <span className="bappa-pill">{selectedPhoto.moderationStatus}</span>
-                </div>
-              </div>
+              <p className="text-xs mb-4" style={{ color: "var(--muted-brown)" }}>
+                Submitted by {selectedPhoto.user.generatedName} #{selectedPhoto.user.generatedNumber}
+              </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => handleApprovePhoto(selectedPhoto.id)}
                   disabled={actionLoading}
-                  className="flex-1 btn-primary disabled:opacity-50"
+                  className="flex-1 btn-primary text-xs font-bold disabled:opacity-50"
                 >
-                  ✓ APPROVE
+                  ✓ APPROVE PHOTO
                 </button>
                 <button
                   onClick={() => handleRejectPhoto(selectedPhoto.id)}
                   disabled={actionLoading}
-                  className="flex-1 btn-secondary disabled:opacity-50"
-                  style={{ borderColor: "var(--vermillion)", color: "var(--vermillion)" }}
+                  className="flex-1 btn-secondary text-xs font-bold disabled:opacity-50"
+                  style={{ color: "var(--vermillion)", borderColor: "var(--vermillion)" }}
                 >
                   ✕ REJECT
                 </button>
               </div>
-
-              <button
-                onClick={() => setSelectedPhoto(null)}
-                className="w-full mt-3 py-2 text-sm"
-                style={{ color: "var(--fog-gray)" }}
-              >
-                Cancel
-              </button>
             </motion.div>
           </motion.div>
         )}

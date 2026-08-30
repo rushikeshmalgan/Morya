@@ -32,13 +32,17 @@ export const viewport = {
 
 export const themeColor = "#ea580c";
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0F0B08] text-[#FFF8E7]">
+      <body className="min-h-full flex flex-col bg-[#FFF4E3] text-[#4A3028]">
         {children}
       </body>
     </html>

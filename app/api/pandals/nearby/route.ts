@@ -5,18 +5,19 @@ import { prisma } from "@/lib/prisma";
 import { haversineDistance, getPandalState } from "@/lib/geo";
 import { getSessionUser } from "@/lib/auth";
 import { PandalStatus } from "@prisma/client";
+import { parseBoundedNumber, parseCoordinate } from "@/lib/validation";
 
 const CHECKIN_RADIUS = parseInt(process.env.CHECKIN_RADIUS_METERS || "150");
 const DEFAULT_SEARCH_RADIUS = 5000; // 5km
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const lat = parseFloat(searchParams.get("lat") || "0");
-  const lng = parseFloat(searchParams.get("lng") || "0");
-  const radius = parseFloat(searchParams.get("radius") || String(DEFAULT_SEARCH_RADIUS));
+  const lat = parseCoordinate(searchParams.get("lat"), "latitude");
+  const lng = parseCoordinate(searchParams.get("lng"), "longitude");
+  const radius = parseBoundedNumber(searchParams.get("radius"), DEFAULT_SEARCH_RADIUS, 100, 20_000);
 
-  if (!lat || !lng) {
-    return NextResponse.json({ error: "lat and lng required" }, { status: 400 });
+  if (lat === null || lng === null || radius === null) {
+    return NextResponse.json({ error: "Valid lat, lng, and radius are required" }, { status: 400 });
   }
 
   // Get current user's discovered pandals (optional — unauthenticated users see fog only)
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       const isDiscovered = discoveredPandalIds.has(pandal.id);
       const state = getPandalState(distance, isDiscovered, CHECKIN_RADIUS);
 
-      if (state === "hidden") return null;
+      if (distance > radius || state === "hidden") return null;
 
       // Apply fog — limit info for undetected/revealed pandals
       const fogApplied = state === "detected";

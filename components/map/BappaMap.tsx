@@ -171,20 +171,29 @@ export default function BappaMap({
       attributionControl: false,
     });
 
-    // Clean, readable, light CartoDB Voyager map tiles (soft warm & readable roads)
+    // Clean OpenStreetMap tiles (watermark-free, fast, reliable)
     const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
-    const tileUrl = cartoApiKey
+    const isCartoKeyConfigured = Boolean(
+      cartoApiKey &&
+        cartoApiKey.length > 20 &&
+        !cartoApiKey.startsWith("cb1_2kgj") &&
+        cartoApiKey !== "your-carto-api-key"
+    );
+
+    const tileUrl = isCartoKeyConfigured
       ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${cartoApiKey}`
-      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    const subdomains = isCartoKeyConfigured ? "abcd" : "abc";
 
     L.tileLayer(tileUrl, {
       maxZoom: 19,
-      subdomains: "abcd",
+      subdomains,
     }).addTo(map);
 
     // Attribution
     L.control
-      .attribution({ prefix: "© CartoDB © OSM" })
+      .attribution({ prefix: isCartoKeyConfigured ? "© CartoDB © OSM" : "© OpenStreetMap contributors" })
       .addTo(map);
 
     mapRef.current = map;

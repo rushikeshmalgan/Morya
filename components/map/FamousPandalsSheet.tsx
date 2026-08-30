@@ -93,7 +93,7 @@ export default function FamousPandalsSheet({
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 350 }}
         className="bottom-sheet max-h-[85vh] flex flex-col"
-        style={{ paddingBottom: "24px" }}
+        style={{ paddingBottom: "80px" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bottom-sheet-handle" />
@@ -180,12 +180,12 @@ export default function FamousPandalsSheet({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="bappa-card p-3 flex items-center justify-between gap-3 hover:shadow-md transition-shadow cursor-pointer"
+                className="bappa-card p-3 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => onSelectPandal(pandal)}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex items-start gap-2.5">
                   <div
-                    className="w-13 h-13 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden shadow-xs"
+                    className="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden shadow-xs"
                     style={{ background: "#FFE8D2" }}
                   >
                     {pandal.imageUrl ? (
@@ -196,27 +196,27 @@ export default function FamousPandalsSheet({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-2xl">🐘</span>
+                      <span className="text-xl">🐘</span>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h4 className="font-bold text-xs truncate" style={{ color: "var(--warm-brown)" }}>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-xs truncate" style={{ color: "var(--warm-brown)", maxWidth: "140px" }}>
                         {pandal.name}
                       </h4>
                       {pandal.isRare && (
-                        <span className="bappa-pill py-0 px-1.5 text-[9px]">
+                        <span className="bappa-pill py-0 px-1.5 text-[9px] flex-shrink-0">
                           ⭐ Rare
                         </span>
                       )}
                     </div>
 
-                    <p className="text-[11px] truncate mt-0.5" style={{ color: "var(--muted-brown)" }}>
+                    <p className="text-[10px] truncate mt-0.5" style={{ color: "var(--muted-brown)" }}>
                       📍 {pandal.city} • {pandal.address || pandal.city}
                     </p>
 
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] font-semibold" style={{ color: "var(--saffron-dark)" }}>
                         🎯 {getDistanceKm(pandal.latitude, pandal.longitude)} away
                       </span>
@@ -229,18 +229,18 @@ export default function FamousPandalsSheet({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                {/* Action buttons row — separate from info to prevent overlap */}
+                <div className="flex items-center gap-1.5 mt-2 pt-2 border-t" style={{ borderColor: "rgba(216, 169, 74, 0.2)" }}>
                   {onNavigatePandal && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigatePandal(pandal);
                       }}
-                      className="btn-primary py-2 px-2.5 text-xs font-bold whitespace-nowrap flex items-center gap-1"
-                      style={{ fontSize: "11px" }}
+                      className="btn-primary py-1.5 px-3 text-[10px] font-bold whitespace-nowrap flex items-center gap-1 flex-1 justify-center"
                       title="Show walking route on map"
                     >
-                      <span>🧭</span> Walk
+                      <span>🧭</span> Walk There
                     </button>
                   )}
                   <button
@@ -248,11 +248,10 @@ export default function FamousPandalsSheet({
                       e.stopPropagation();
                       onSelectPandal(pandal);
                     }}
-                    className="btn-secondary py-2 px-2.5 text-xs font-bold whitespace-nowrap flex items-center gap-1"
-                    style={{ fontSize: "11px" }}
+                    className="btn-secondary py-1.5 px-3 text-[10px] font-bold whitespace-nowrap flex items-center gap-1 flex-1 justify-center"
                     title="Locate on map"
                   >
-                    <span>🎯</span>
+                    <span>🎯</span> View
                   </button>
                 </div>
               </motion.div>

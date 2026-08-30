@@ -70,7 +70,7 @@ export default function MushakRadar({ pandals, onFocusPandal }: MushakRadarProps
       <AnimatePresence>
         {isOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pb-20 bg-black/40 backdrop-blur-xs"
             onClick={() => setIsOpen(false)}
           >
             <motion.div
@@ -78,7 +78,7 @@ export default function MushakRadar({ pandals, onFocusPandal }: MushakRadarProps
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 30, opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 28, stiffness: 350 }}
-              className="w-full max-w-sm rounded-3xl p-5 shadow-2xl relative"
+              className="w-full max-w-sm rounded-3xl p-5 shadow-2xl relative mx-4"
               style={{
                 background: "linear-gradient(145deg, #FFF9F1, #FFE8D2)",
                 border: "2px solid var(--border-gold)",

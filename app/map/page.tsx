@@ -20,6 +20,8 @@ import { WalkingRoute, getWalkingRoute, formatDuration } from "@/lib/routing";
 import MushakBubble from "@/components/mushak/MushakBubble";
 import MushakRadar from "@/components/mushak/MushakRadar";
 import { getMushakDialogue, shouldShowMushakTip, MushakDialogue } from "@/lib/mushak";
+import ProximityAlertBanner, { ProximityAlert } from "@/components/map/ProximityAlertBanner";
+import { triggerHaptic, playFestiveChime, sendPandalNotification, requestNotificationPermission } from "@/lib/haptics";
 
 // Dynamic import of map (no SSR — Leaflet requires browser)
 const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
@@ -103,15 +105,18 @@ export default function MapPage() {
   const [_photoError, setPhotoError] = useState("");
   const [streak, setStreak] = useState(getStreakData());
   const [weeklyVisits, setWeeklyVisits] = useState(getWeeklyVisitCount());
+  const [proximityAlert, setProximityAlert] = useState<ProximityAlert | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
   const fetchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const alertedPandalsRef = useRef<Map<string, { state: string; timestamp: number }>>(new Map());
 
   // Demo location — Kasba Ganpati area, Pune
   const DEMO_LOCATION = { lat: 18.5196, lng: 73.8553 };
 
   const handleLocateMe = () => {
     setIsLocating(true);
+    requestNotificationPermission().catch(() => {});
     if (navigator.geolocation && !isDemo) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -241,7 +246,7 @@ export default function MapPage() {
         setLocationDenied(true);
         setUserLocation(DEMO_LOCATION);
       },
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 4000, timeout: 10000 }
     );
   };
 
@@ -267,10 +272,76 @@ export default function MapPage() {
     fetchNearby(userLocation.lat, userLocation.lng);
     fetchIntervalRef.current = setInterval(
       () => fetchNearby(userLocation.lat, userLocation.lng),
-      30000
+      15000
     );
     return () => { if (fetchIntervalRef.current) clearInterval(fetchIntervalRef.current); };
   }, [userLocation, fetchNearby]);
+
+  // ── 1 KM PROXIMITY DETECTION & HAPTIC NOTIFICATION ENGINE ──
+  useEffect(() => {
+    if (!nearbyPandals.length || !userLocation) return;
+
+    const now = Date.now();
+    const undiscovered = nearbyPandals.filter((p) => p.state !== "discovered");
+
+    // 1. Check for in-range pandals (<= 150m check-in radius)
+    const inRangePandal = undiscovered.find((p) => p.state === "in_range");
+    if (inRangePandal) {
+      const prevAlert = alertedPandalsRef.current.get(inRangePandal.id);
+      if (!prevAlert || prevAlert.state !== "in_range" || now - prevAlert.timestamp > 120_000) {
+        alertedPandalsRef.current.set(inRangePandal.id, { state: "in_range", timestamp: now });
+        triggerHaptic("in_range");
+        playFestiveChime("in_range");
+        const name = inRangePandal.name === "???" ? "A Bappa Pandal" : inRangePandal.name;
+        sendPandalNotification(
+          "🛕 Bappa in Check-in Range!",
+          `${name} is only ${inRangePandal.distance}m away! Tap to claim your discovery.`
+        );
+        setProximityAlert({
+          id: inRangePandal.id,
+          pandal: inRangePandal,
+          type: "in_range",
+          timestamp: now,
+        });
+        return;
+      }
+    }
+
+    // 2. Check for pandals detected within 1 km (<= 1000m)
+    const detectedIn1Km = undiscovered
+      .filter((p) => p.distance <= 1000 && (p.state === "revealed" || p.state === "detected"))
+      .sort((a, b) => a.distance - b.distance);
+
+    if (detectedIn1Km.length > 0) {
+      const closest = detectedIn1Km[0];
+      const prevAlert = alertedPandalsRef.current.get(closest.id);
+      if (!prevAlert || now - prevAlert.timestamp > 240_000) {
+        alertedPandalsRef.current.set(closest.id, { state: closest.state, timestamp: now });
+        triggerHaptic("detected");
+        playFestiveChime("detected");
+        const name = closest.name === "???" ? "Mystic Bappa signal" : closest.name;
+        sendPandalNotification(
+          "🔔 Pandal Detected in 1 km!",
+          `${name} detected ~${closest.distance}m away.`
+        );
+        setProximityAlert({
+          id: closest.id,
+          pandal: closest,
+          type: closest.state === "revealed" ? "revealed" : "detected",
+          timestamp: now,
+        });
+      }
+    }
+  }, [nearbyPandals, userLocation]);
+
+  // Auto-dismiss proximity alert banner after 8 seconds
+  useEffect(() => {
+    if (!proximityAlert) return;
+    const timer = setTimeout(() => {
+      setProximityAlert(null);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [proximityAlert]);
 
   // Contextual Mushak proximity hints with frequency control
   useEffect(() => {
@@ -347,6 +418,9 @@ export default function MapPage() {
       }
 
       if (data.success) {
+        triggerHaptic("discovery");
+        playFestiveChime("discovery");
+
         setDiscoveryResult({
           pandalName: data.pandal.name,
           scoreEarned: data.scoreEarned,
@@ -562,6 +636,19 @@ export default function MapPage() {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* ── 1 KM PROXIMITY NOTIFICATION & HAPTIC ALERT BANNER ── */}
+      {flow.phase === "map" && (
+        <ProximityAlertBanner
+          alert={proximityAlert}
+          onDismiss={() => setProximityAlert(null)}
+          onAction={(pandal) => {
+            setFlyToTarget({ lat: pandal.latitude, lng: pandal.longitude, zoom: 16, timestamp: Date.now() });
+            handlePandalTap(pandal);
+            setProximityAlert(null);
+          }}
+        />
       )}
 
       {/* ── FAMOUS PANDALS FLOATING BUTTON ── */}

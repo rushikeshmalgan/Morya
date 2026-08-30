@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Bappa Morya',
   webDir: 'public',
   server: {
-    androidScheme: 'https',
+    url: 'http://localhost:3000',
     cleartext: true,
   },
 };

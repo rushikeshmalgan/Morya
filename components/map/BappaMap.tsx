@@ -123,6 +123,56 @@ function createUserIcon(): L.DivIcon {
   });
 }
 
+// Custom 3D Festive Destination Pin with floating pill label & ground halo
+function createDestinationIcon(name?: string): L.DivIcon {
+  const cleanName = name && name !== "???" ? name : "Destination Pandal";
+  const shortName = cleanName.length > 20 ? cleanName.slice(0, 18) + "…" : cleanName;
+
+  return L.divIcon({
+    html: `
+      <div class="destination-pin-wrapper">
+        <!-- Floating Label Pill -->
+        <div class="destination-pill-badge">
+          <span class="destination-flag-icon">🚩</span>
+          <span class="destination-text">${shortName}</span>
+        </div>
+
+        <!-- 3D Festive Destination Pin -->
+        <div class="destination-pin-body">
+          <svg xmlns="http://www.w3.org/2000/svg" width="46" height="56" viewBox="0 0 46 56">
+            <defs>
+              <filter id="dest-shadow" x="-30%" y="-20%" width="160%" height="150%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#4A3028" flood-opacity="0.45"/>
+              </filter>
+              <linearGradient id="dest-pin-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#E9784F"/>
+                <stop offset="50%" stop-color="#D9483B"/>
+                <stop offset="100%" stop-color="#B83A2E"/>
+              </linearGradient>
+            </defs>
+            <g filter="url(#dest-shadow)">
+              <!-- Pin Outer Shape -->
+              <path d="M23 2 C12 2 3 11 3 22 C3 36 23 53 23 53 C23 53 43 36 43 22 C43 11 34 2 23 2 Z"
+                    fill="url(#dest-pin-grad)" stroke="#FFF9F1" stroke-width="2.5"/>
+              <!-- Inner Gold Border Ring -->
+              <circle cx="23" cy="21" r="14" fill="#FFF9F1" stroke="#D8A94A" stroke-width="2"/>
+              <!-- Center Temple Icon -->
+              <text x="23" y="27" text-anchor="middle" font-size="16">🛕</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Ground Pulse Halo -->
+        <div class="destination-ground-halo"></div>
+      </div>
+    `,
+    className: "bappa-destination-marker",
+    iconSize: [160, 85],
+    iconAnchor: [80, 80],
+    popupAnchor: [0, -80],
+  });
+}
+
 export default function BappaMap({
   userLocation,
   pandals,
@@ -140,6 +190,8 @@ export default function BappaMap({
   const radiusCircleRef = useRef<L.Circle | null>(null);
   const routePolylineRef = useRef<L.Polyline | null>(null);
   const routeGlowRef = useRef<L.Polyline | null>(null);
+  const destinationMarkerRef = useRef<L.Marker | null>(null);
+  const destinationCircleRef = useRef<L.Circle | null>(null);
   const initialCenterSet = useRef(false);
 
   // Smoothly fly to user location when recenterKey changes
@@ -276,7 +328,7 @@ export default function BappaMap({
     const map = mapRef.current;
     if (!map) return;
 
-    // Clean up existing route layers
+    // Clean up existing route layers and destination markers
     if (routeGlowRef.current) {
       routeGlowRef.current.remove();
       routeGlowRef.current = null;
@@ -285,9 +337,18 @@ export default function BappaMap({
       routePolylineRef.current.remove();
       routePolylineRef.current = null;
     }
+    if (destinationMarkerRef.current) {
+      destinationMarkerRef.current.remove();
+      destinationMarkerRef.current = null;
+    }
+    if (destinationCircleRef.current) {
+      destinationCircleRef.current.remove();
+      destinationCircleRef.current = null;
+    }
 
     if (activeRoute && activeRoute.coordinates.length > 0) {
       const latlngs: L.LatLngExpression[] = activeRoute.coordinates;
+      const destCoords = activeRoute.coordinates[activeRoute.coordinates.length - 1];
 
       // Soft warm glow underlay
       routeGlowRef.current = L.polyline(latlngs, {
@@ -308,12 +369,43 @@ export default function BappaMap({
         dashArray: activeRoute.source === "fallback" ? "6 6" : undefined,
       }).addTo(map);
 
+      // Distinct, animated Destination Ground Circle
+      destinationCircleRef.current = L.circle(destCoords, {
+        radius: 28,
+        color: "#D8A94A",
+        fillColor: "#E9784F",
+        fillOpacity: 0.25,
+        weight: 2,
+        dashArray: "4 3",
+      }).addTo(map);
+
+      // Add High-Visibility 3D Destination Pin at the route end
+      const destIcon = createDestinationIcon(activeRoute.destinationName);
+      const destMarker = L.marker(destCoords, {
+        icon: destIcon,
+        zIndexOffset: 2000,
+      }).addTo(map);
+
+      // Tapping destination marker re-opens pandal details if available
+      destMarker.on("click", () => {
+        if (activeRoute.destinationId) {
+          const matchedPandal = pandals.find((p) => p.id === activeRoute.destinationId);
+          if (matchedPandal) {
+            onPandalTap(matchedPandal);
+            return;
+          }
+        }
+        map.setView(destCoords, 17, { animate: true });
+      });
+
+      destinationMarkerRef.current = destMarker;
+
       // Fit map view to encompass the entire route comfortably
       try {
         const bounds = routePolylineRef.current.getBounds();
         if (bounds.isValid()) {
           map.fitBounds(bounds, {
-            padding: [70, 70],
+            padding: [75, 75],
             maxZoom: 17,
             animate: true,
             duration: 1.2,
@@ -323,7 +415,7 @@ export default function BappaMap({
         // Fallback view update if bounds error
       }
     }
-  }, [activeRoute]);
+  }, [activeRoute, pandals, onPandalTap]);
 
   return (
     <div

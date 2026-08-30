@@ -382,6 +382,110 @@ body {
   transform: scale(1.18);
 }
 
+/* ── DESTINATION MARKER STYLES ── */
+.bappa-destination-marker {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  overflow: visible !important;
+}
+
+.destination-pin-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.destination-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #4A3028 0%, #2A1810 100%);
+  color: #FFF9F1;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1.5px solid #D8A94A;
+  box-shadow: 0 4px 14px rgba(74, 48, 40, 0.45);
+  white-space: nowrap;
+  margin-bottom: 4px;
+  animation: dest-float 2.2s ease-in-out infinite;
+  z-index: 10;
+}
+
+.destination-flag-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.destination-text {
+  color: #FFF4E3;
+}
+
+.destination-pin-body {
+  position: relative;
+  z-index: 5;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: dest-pin-drop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.destination-pin-wrapper:hover .destination-pin-body {
+  transform: scale(1.15) translateY(-4px);
+}
+
+.destination-ground-halo {
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(233, 120, 79, 0.45);
+  border: 1.5px solid #D8A94A;
+  animation: dest-halo-pulse 1.8s ease-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes dest-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes dest-pin-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-28px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dest-halo-pulse {
+  0% {
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-50%) scale(2.3);
+    opacity: 0;
+  }
+}
+
 /* ── DISCOVERY ANIMATION ── */
 @keyframes bappa-unlock {
   0% { transform: scale(0.5); opacity: 0; }

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { NearbyPandal } from "@/app/map/page";
 import { formatDistance } from "@/lib/geo";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 interface PandalBottomSheetProps {
   pandal: NearbyPandal;
@@ -11,6 +12,8 @@ interface PandalBottomSheetProps {
   isDemoMode: boolean;
   onClose: () => void;
   onCheckin: (pandalId: string) => void;
+  onNavigate?: (pandal: NearbyPandal) => void;
+  isRouting?: boolean;
 }
 
 function StateLabel({ state }: { state: NearbyPandal["state"] }) {
@@ -39,6 +42,8 @@ export default function PandalBottomSheet({
   isDemoMode,
   onClose,
   onCheckin,
+  onNavigate,
+  isRouting,
 }: PandalBottomSheetProps) {
   const aartiTimes = pandal.aartiTimes ? JSON.parse(pandal.aartiTimes) : [];
   const canCheckin = pandal.state === "in_range" || isDemoMode;
@@ -160,49 +165,100 @@ export default function PandalBottomSheet({
         {/* Distance guidance */}
         {pandal.state !== "discovered" && pandal.state !== "in_range" && (
           <div
-            className="mb-5 p-3.5 rounded-2xl text-sm"
+            className="mb-5 p-3 rounded-2xl flex items-center gap-2.5"
             style={{
               background: "#FFF4E3",
               border: "1px solid var(--border-cream)",
-              color: "var(--muted-brown)",
             }}
           >
-            {pandal.state === "revealed"
-              ? `🐘 You're ${formatDistance(pandal.distance)} away. Keep walking to unlock this Bappa!`
-              : `🪷 Walk closer to reveal this Bappa. Something special is nearby...`}
+            <MushakAvatar mood={pandal.state === "revealed" ? "excited" : "curious"} size="xs" />
+            <p className="text-xs leading-relaxed" style={{ color: "var(--muted-brown)" }}>
+              {pandal.state === "revealed"
+                ? `\"Arre bhau, you're ${formatDistance(pandal.distance)} away! Keep walking to unlock!\"`
+                : `\"Walk closer to reveal this Bappa. Something special is nearby...\"`}
+            </p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="space-y-2.5">
           {canCheckin ? (
-            <button
-              id={`checkin-${pandal.id}`}
-              className="btn-primary flex-1 text-sm font-bold"
-              onClick={() => onCheckin(pandal.id)}
-            >
-              {isDemoMode ? "🎮 UNLOCK THIS BAPPA (DEMO)" : "🐘 DISCOVER THIS BAPPA"}
-            </button>
+            <div className="flex gap-2.5">
+              <button
+                id={`checkin-${pandal.id}`}
+                className="btn-primary flex-1 text-sm font-bold"
+                onClick={() => onCheckin(pandal.id)}
+              >
+                {isDemoMode ? "🎮 UNLOCK THIS BAPPA (DEMO)" : "🐘 DISCOVER THIS BAPPA"}
+              </button>
+              {onNavigate && (
+                <button
+                  id={`navigate-${pandal.id}`}
+                  className="btn-secondary px-3.5 text-xs font-bold flex items-center gap-1.5"
+                  title="Show walking path on map"
+                  onClick={() => onNavigate(pandal)}
+                  disabled={isRouting}
+                >
+                  <span>🧭</span>
+                  <span>Path</span>
+                </button>
+              )}
+              <button
+                id={`directions-${pandal.id}`}
+                className="btn-secondary px-3 text-sm"
+                title="Open in Google Maps"
+                onClick={openDirections}
+              >
+                ↗️
+              </button>
+            </div>
           ) : (
-            <div
-              className="flex-1 p-3 rounded-xl text-center text-sm font-semibold flex items-center justify-center gap-1.5"
-              style={{
-                background: "#FFE8D2",
-                border: "1px solid var(--border-cream)",
-                color: "var(--muted-brown)",
-              }}
-            >
-              <span>📍</span> Get within {checkinRadius}m to unlock
+            <div className="space-y-2">
+              {onNavigate && (
+                <button
+                  id={`navigate-main-${pandal.id}`}
+                  className="btn-primary w-full text-sm font-bold py-3.5 flex items-center justify-center gap-2"
+                  onClick={() => onNavigate(pandal)}
+                  disabled={isRouting}
+                >
+                  {isRouting ? (
+                    <>
+                      <span className="animate-spin text-base">⏳</span>
+                      <span>Finding shortest path...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-base">🧭</span>
+                      <span>WALK TO BAPPA</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex-1 p-2.5 rounded-xl text-center text-xs font-semibold flex items-center justify-center gap-1.5"
+                  style={{
+                    background: "#FFE8D2",
+                    border: "1px solid var(--border-cream)",
+                    color: "var(--muted-brown)",
+                  }}
+                >
+                  <span>📍</span> Get within {checkinRadius}m to unlock
+                </div>
+
+                <button
+                  id={`directions-${pandal.id}`}
+                  className="btn-secondary py-2.5 px-3.5 text-xs font-semibold flex items-center gap-1"
+                  title="Open in Google Maps"
+                  onClick={openDirections}
+                >
+                  <span>Google Maps</span>
+                  <span>↗️</span>
+                </button>
+              </div>
             </div>
           )}
-          <button
-            id={`directions-${pandal.id}`}
-            className="btn-secondary px-4 text-base"
-            title="Directions"
-            onClick={openDirections}
-          >
-            🧭
-          </button>
         </div>
       </motion.div>
     </>

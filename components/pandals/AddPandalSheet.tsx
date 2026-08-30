@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 type Step = "confirm" | "location" | "photo" | "details" | "submitting" | "success" | "duplicate";
 
@@ -221,13 +222,31 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               exit={{ opacity: 0, x: -20 }}
               className="text-center mb-6"
             >
-              <p className="text-5xl mb-3">🐘</p>
+              <div className="flex justify-center mb-3">
+                <MushakAvatar mood="excited" size="lg" />
+              </div>
               <h2 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
                 Found a New Bappa?
               </h2>
-              <p className="text-xs max-w-xs mx-auto mb-6 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
-                Know a Ganpati pandal that&apos;s missing from the map? Add it so other explorers in your city can discover it.
-              </p>
+
+              <div
+                className="p-3 rounded-2xl my-3 text-left flex items-start gap-2.5"
+                style={{
+                  background: "#FFE8D2",
+                  border: "1px solid var(--border-gold)",
+                }}
+              >
+                <MushakAvatar mood="pointing" size="xs" />
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--saffron-dark)" }}>
+                    MUSHAK MAHARAJ SAYS:
+                  </p>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--warm-brown)" }}>
+                    &quot;Found a pandal that isn&apos;t on the map? Let&apos;s add it so all explorers in Maharashtra can visit!&quot;
+                  </p>
+                </div>
+              </div>
+
               <button onClick={() => setStep("location")} className="btn-primary w-full text-xs font-bold" id="add-pandal-start-btn">
                 🐘 START PANDAL SUBMISSION
               </button>
@@ -498,15 +517,11 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="text-center py-4"
+              className="text-center py-3"
             >
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-5xl mb-3"
-              >
-                🎉
-              </motion.div>
+              <div className="flex justify-center mb-2">
+                <MushakAvatar mood="celebrating" size="xl" />
+              </div>
               <p
                 className="text-xs font-extrabold tracking-[0.15em] uppercase mb-1"
                 style={{ color: "var(--saffron-dark)" }}
@@ -516,23 +531,23 @@ export default function AddPandalSheet({ userLocation, sessionToken, onClose, on
               <h3 className="font-display font-bold text-xl mb-1" style={{ color: "var(--warm-brown)" }}>
                 You Found a New Bappa!
               </h3>
-              <p className="text-xs max-w-xs mx-auto mb-5 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
-                Your pandal submission will be live on the map for all explorers once reviewed.
+              <p className="text-xs max-w-xs mx-auto mb-4 leading-relaxed" style={{ color: "var(--muted-brown)" }}>
+                Once approved by moderators, other explorers can discover it too!
               </p>
 
               <div
-                className="mb-5 p-4 rounded-2xl"
+                className="mb-5 p-3.5 rounded-2xl"
                 style={{
                   background: "#FFE8D2",
                   border: "1px solid var(--border-gold)",
                 }}
               >
-                <p className="text-2xl mb-1">🌟</p>
-                <p className="text-sm font-bold" style={{ color: "var(--warm-brown)" }}>
+                <p className="text-xl mb-0.5">🌟</p>
+                <p className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
                   + Pandal Pioneer XP
                 </p>
-                <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
-                  Earn bonus score points when approved.
+                <p className="text-[11px]" style={{ color: "var(--muted-brown)" }}>
+                  Bonus XP awarded after moderation review.
                 </p>
               </div>
 

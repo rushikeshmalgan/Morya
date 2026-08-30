@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 interface QuestCardProps {
   quest: {
@@ -26,9 +27,9 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
         style={{ background: "rgba(255, 249, 241, 0.95)" }}
       >
         <div className="flex items-center gap-2">
-          <span>🔥</span>
+          <MushakAvatar mood="pointing" size="xs" />
           <span className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
-            Quest: {quest.title} ({quest.progress}/{quest.requirement})
+            Mushak Maharaj&apos;s Mission: {quest.title} ({quest.progress}/{quest.requirement})
           </span>
         </div>
         <span className="text-xs" style={{ color: "var(--muted-brown)" }}>▲</span>
@@ -39,13 +40,13 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
   return (
     <div className="quest-card">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <span>🔥</span>
+        <div className="flex items-center gap-2">
+          <MushakAvatar mood={quest.completed ? "celebrating" : "pointing"} size="xs" />
           <p
             className="text-[11px] font-extrabold tracking-[0.12em] uppercase"
             style={{ color: "var(--saffron-dark)" }}
           >
-            TODAY&apos;S BAPPA HUNT
+            MUSHAK MAHARAJ&apos;S MISSION
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -89,7 +90,7 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
             className="font-bold text-xs"
             style={{ color: "var(--success)" }}
           >
-            Quest Complete! +Points earned!
+            Mission Complete! Mushak Maharaj is proud of you! +XP earned
           </span>
         </motion.div>
       ) : (
@@ -102,8 +103,13 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
-          <p className="text-[11px]" style={{ color: "var(--muted-brown)" }}>
-            {remaining === 1 ? "Just 1 more pandal nearby!" : `Find ${remaining} nearby pandals to complete`}
+          <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted-brown)" }}>
+            <span>🐭</span>
+            <span>
+              {remaining === 1
+                ? "Arre bhau, just 1 more Bappa to complete today's mission!"
+                : `Find ${remaining} nearby pandals to claim bonus XP!`}
+            </span>
           </p>
         </>
       )}

@@ -14,8 +14,12 @@ import PhotoPreviewSheet from "@/components/photo/PhotoPreviewSheet";
 import PhotoSuccessSheet from "@/components/photo/PhotoSuccessSheet";
 import AddPandalSheet from "@/components/pandals/AddPandalSheet";
 import FamousPandalsSheet, { FamousPandal } from "@/components/map/FamousPandalsSheet";
-import { getStoredUser, isDemoMode, BappaUser } from "@/lib/store";
+import { getStoredUser, isDemoMode, BappaUser, getStreakData, recordVisit, getWeeklyVisitCount } from "@/lib/store";
 import { formatDistance } from "@/lib/geo";
+import { WalkingRoute, getWalkingRoute, formatDuration } from "@/lib/routing";
+import MushakBubble from "@/components/mushak/MushakBubble";
+import MushakRadar from "@/components/mushak/MushakRadar";
+import { getMushakDialogue, shouldShowMushakTip, MushakDialogue } from "@/lib/mushak";
 
 // Dynamic import of map (no SSR — Leaflet requires browser)
 const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
@@ -88,11 +92,17 @@ export default function MapPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [showFamousSheet, setShowFamousSheet] = useState(false);
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number; zoom?: number; timestamp: number } | null>(null);
+  const [activeRoute, setActiveRoute] = useState<WalkingRoute | null>(null);
+  const [isRouting, setIsRouting] = useState(false);
+  const [routeToast, setRouteToast] = useState<string | null>(null);
+  const [mushakTip, setMushakTip] = useState<MushakDialogue | null>(null);
   const [flow, setFlow] = useState<FlowStep>({ phase: "map" });
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [_pendingPhotoPreview, setPendingPhotoPreview] = useState<string>("");
   const [photoUploading, setPhotoUploading] = useState(false);
   const [_photoError, setPhotoError] = useState("");
+  const [streak, setStreak] = useState(getStreakData());
+  const [weeklyVisits, setWeeklyVisits] = useState(getWeeklyVisitCount());
 
   const watchIdRef = useRef<number | null>(null);
   const fetchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -125,6 +135,37 @@ export default function MapPage() {
     }
   };
 
+  const handleNavigateToPandal = async (pandal: {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    const origin = userLocation || DEMO_LOCATION;
+    setIsRouting(true);
+    try {
+      const displayName = pandal.name === "???" ? "Bappa Pandal" : pandal.name;
+      const route = await getWalkingRoute(
+        origin.lat,
+        origin.lng,
+        pandal.latitude,
+        pandal.longitude,
+        displayName,
+        pandal.id
+      );
+      setActiveRoute(route);
+      setSelectedPandal(null); // Close sheet to view the walking path immediately
+      setShowFamousSheet(false);
+      setMushakTip(getMushakDialogue("navigation_start"));
+    } catch (err) {
+      console.warn("Routing calculation error:", err);
+      setRouteToast("Couldn't calculate walking route. Please try again.");
+      setTimeout(() => setRouteToast(null), 3500);
+    } finally {
+      setIsRouting(false);
+    }
+  };
+
   const handleSelectFamousPandal = (pandal: FamousPandal) => {
     setShowFamousSheet(false);
     // Smoothly fly map to famous pandal coordinates
@@ -148,6 +189,19 @@ export default function MapPage() {
       distance: 0,
       state: "revealed",
     });
+  };
+
+  const handleFamousPandalNavigate = (pandal: FamousPandal) => {
+    handleNavigateToPandal({
+      id: pandal.id,
+      name: pandal.name,
+      latitude: pandal.latitude,
+      longitude: pandal.longitude,
+    });
+  };
+
+  const handleClearRoute = () => {
+    setActiveRoute(null);
   };
 
   useEffect(() => {
@@ -217,6 +271,20 @@ export default function MapPage() {
     );
     return () => { if (fetchIntervalRef.current) clearInterval(fetchIntervalRef.current); };
   }, [userLocation, fetchNearby]);
+
+  // Contextual Mushak proximity hints with frequency control
+  useEffect(() => {
+    if (!nearbyPandals.length || activeRoute) return;
+
+    const hasInRange = nearbyPandals.some((p) => p.state === "in_range");
+    const hasRevealed = nearbyPandals.some((p) => p.state === "revealed");
+
+    if (hasInRange && shouldShowMushakTip("nearby_in_range", 60000)) {
+      setMushakTip(getMushakDialogue("nearby_in_range"));
+    } else if (hasRevealed && shouldShowMushakTip("nearby_approaching", 60000)) {
+      setMushakTip(getMushakDialogue("nearby_approaching"));
+    }
+  }, [nearbyPandals, activeRoute]);
 
   // Fetch active quests
   useEffect(() => {
@@ -294,6 +362,11 @@ export default function MapPage() {
         setUser(newUser);
         localStorage.setItem("bappa_user", JSON.stringify(newUser));
 
+        // Record streak
+        const newStreak = recordVisit();
+        setStreak(newStreak);
+        setWeeklyVisits(getWeeklyVisitCount());
+
         // Update quest
         if (activeQuest) {
           setActiveQuest((prev) =>
@@ -303,6 +376,9 @@ export default function MapPage() {
 
         // Refresh nearby
         if (userLocation) fetchNearby(userLocation.lat, userLocation.lng);
+
+        // Clear active route if this pandal was the navigation target
+        setActiveRoute((curr) => (curr?.destinationId === pandalId ? null : curr));
       }
     } catch {
       alert("Something went wrong. Please try again.");
@@ -417,63 +493,75 @@ export default function MapPage() {
           isDemoMode={isDemo}
           recenterKey={recenterKey}
           flyToTarget={flyToTarget}
+          activeRoute={activeRoute}
         />
       )}
 
       {/* ── TOP FLOATING PLAYER CARD ── */}
-      {flow.phase === "map" && (
-        <div className="fixed top-0 left-0 right-0 z-20 p-4 safe-top pointer-events-none">
-          <div className="flex items-center justify-between max-w-md mx-auto pointer-events-auto">
-            {/* Identity Card */}
-            {user && (
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card px-3.5 py-2 flex items-center gap-2.5"
-                style={{ background: "rgba(255, 249, 241, 0.94)", border: "1px solid rgba(216,169,74,0.3)" }}
-              >
-                <span className="text-xl">🐘</span>
+      {flow.phase === "map" && user && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-0 left-0 right-0 z-20 p-4 safe-top pointer-events-none"
+        >
+          <div className="glass-card max-w-md mx-auto pointer-events-auto overflow-hidden" style={{ background: "rgba(255, 249, 241, 0.96)", border: "1px solid rgba(216,169,74,0.35)" }}>
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <span className="text-2xl">🐘</span>
+                  {streak.currentStreak >= 3 && (
+                    <motion.span
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="absolute -top-1 -right-1 text-xs"
+                    >
+                      🔥
+                    </motion.span>
+                  )}
+                </div>
                 <div>
                   <p className="text-xs font-bold leading-none" style={{ color: "var(--warm-brown)" }}>
                     {user.generatedName}
                   </p>
                   <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-brown)" }}>
                     #{user.generatedNumber}
+                    {streak.currentStreak >= 2 && (
+                      <span style={{ color: "var(--saffron-dark)" }}> • {streak.currentStreak} day streak</span>
+                    )}
                   </p>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Score & Collection stats */}
-            {user && (
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="glass-card px-3.5 py-2 flex items-center gap-3"
-                style={{ background: "rgba(255, 249, 241, 0.94)", border: "1px solid rgba(216,169,74,0.3)" }}
-              >
+              </div>
+              <div className="flex items-center gap-3">
                 <div className="text-center">
                   <p className="text-xs font-extrabold" style={{ color: "var(--saffron-dark)" }}>
-                    {user.uniquePandals} 🐘
+                    {user.uniquePandals}
                   </p>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
+                  <p className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
                     Pandals
                   </p>
                 </div>
-                <div className="w-[1px] h-5" style={{ background: "rgba(120,80,50,0.15)" }} />
+                <div className="w-[1px] h-4" style={{ background: "rgba(120,80,50,0.15)" }} />
                 <div className="text-center">
                   <p className="text-xs font-extrabold" style={{ color: "var(--muted-gold-dark)" }}>
                     ⭐ {user.score}
                   </p>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
+                  <p className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
                     XP
                   </p>
                 </div>
-              </motion.div>
-            )}
+                <div className="w-[1px] h-4" style={{ background: "rgba(120,80,50,0.15)" }} />
+                <div className="text-center">
+                  <p className="text-xs font-extrabold" style={{ color: "var(--success)" }}>
+                    📅 {weeklyVisits}
+                  </p>
+                  <p className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted-brown)" }}>
+                    This Week
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ── FAMOUS PANDALS FLOATING BUTTON ── */}
@@ -499,6 +587,28 @@ export default function MapPage() {
             Famous Pandals
           </span>
         </motion.button>
+      )}
+
+      {/* ── MUSHAK BAPPA RADAR FLOATING BUTTON ── */}
+      {flow.phase === "map" && (
+        <MushakRadar pandals={nearbyPandals} />
+      )}
+
+      {/* ── MUSHAK COMPANION FLOATING BUBBLE ── */}
+      {flow.phase === "map" && !selectedPandal && (
+        <AnimatePresence>
+          {mushakTip && (
+            <MushakBubble
+              title={mushakTip.title}
+              message={mushakTip.message}
+              mood={mushakTip.mood}
+              actionText={mushakTip.actionText}
+              onDismiss={() => setMushakTip(null)}
+              autoDismissMs={6500}
+              position="top-center"
+            />
+          )}
+        </AnimatePresence>
       )}
 
       {/* ── GOOGLE MAPS STYLE LOCATE ME BUTTON ── */}
@@ -588,48 +698,155 @@ export default function MapPage() {
         </div>
       )}
 
+      {/* ── ROUTE ERROR TOAST ── */}
+      {routeToast && flow.phase === "map" && (
+        <div
+          className="fixed top-20 left-4 right-4 z-40 mx-auto max-w-md p-3 text-xs text-center font-semibold rounded-xl shadow-lg animate-fade-in"
+          style={{
+            background: "#FFF4E3",
+            border: "1.5px solid var(--saffron)",
+            color: "var(--warm-brown)",
+          }}
+        >
+          {routeToast}
+        </div>
+      )}
+
+      {/* ── ACTIVE WALKING ROUTE FLOATING CARD ── */}
+      {flow.phase === "map" && activeRoute && !selectedPandal && !discoveryResult && (
+        <motion.div
+          key="active-route-card"
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.96 }}
+          className="fixed left-4 right-4 z-30 max-w-md mx-auto"
+          style={{ bottom: "88px" }}
+        >
+          <div
+            className="p-3.5 rounded-2xl shadow-xl backdrop-blur-md"
+            style={{
+              background: "rgba(255, 249, 241, 0.96)",
+              border: "1.5px solid rgba(216, 169, 74, 0.5)",
+              boxShadow: "0 10px 28px rgba(74, 48, 40, 0.16)",
+            }}
+          >
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                  style={{ background: "#FFE8D2", border: "1px solid var(--border-cream)" }}
+                >
+                  🐘
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-extrabold uppercase tracking-wide truncate" style={{ color: "var(--saffron-dark)" }}>
+                    {activeRoute.destinationName || "BAPPA"} IS {formatDuration(activeRoute.durationSeconds).toUpperCase()} AWAY
+                  </p>
+                  <p className="text-[11px] font-semibold flex items-center gap-2 mt-0.5" style={{ color: "var(--warm-brown)" }}>
+                    <span>🚶 {formatDistance(activeRoute.distanceMeters)}</span>
+                    <span style={{ opacity: 0.4 }}>•</span>
+                    <span>⏱ {formatDuration(activeRoute.durationSeconds)} walk</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  id="clear-route-btn"
+                  onClick={handleClearRoute}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 hover:brightness-95"
+                  style={{
+                    background: "#FFE8D2",
+                    color: "var(--warm-brown)",
+                    border: "1px solid var(--border-cream)",
+                  }}
+                  title="Clear walking route"
+                >
+                  ✕ Clear
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="mt-2.5 pt-2 border-t flex items-center justify-between text-[11px]"
+              style={{ borderColor: "rgba(216, 169, 74, 0.25)" }}
+            >
+              <span className="font-medium truncate" style={{ color: "var(--muted-brown)" }}>
+                Follow the saffron path to find Bappa 🪷
+              </span>
+              <button
+                onClick={() => {
+                  if (activeRoute.coordinates.length > 0) {
+                    const lastCoord = activeRoute.coordinates[activeRoute.coordinates.length - 1];
+                    window.open(
+                      `https://www.google.com/maps/dir/?api=1&destination=${lastCoord[0]},${lastCoord[1]}`,
+                      "_blank"
+                    );
+                  }
+                }}
+                className="text-[10px] font-bold underline flex-shrink-0 ml-2"
+                style={{ color: "var(--saffron-dark)" }}
+              >
+                Maps ↗
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── IN-RANGE ALERT ── */}
-      {flow.phase === "map" && (
+      {flow.phase === "map" && !activeRoute && (
         <AnimatePresence>
           {closestInRange && !selectedPandal && !discoveryResult && (
             <motion.div
               key="in-range"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
               className="fixed left-4 right-4 z-20"
               style={{ bottom: "88px" }}
             >
               <button
                 id="bappa-detected-btn"
                 onClick={() => handlePandalTap(closestInRange)}
-                className="w-full p-4 rounded-2xl text-left shadow-lg"
+                className="w-full p-4 rounded-2xl text-left shadow-lg relative overflow-hidden"
                 style={{
                   background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)",
                   border: "2px solid var(--saffron)",
                   boxShadow: "var(--shadow-warm)",
                 }}
               >
-                <div className="flex items-center gap-3">
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ background: "rgba(233, 120, 79, 0.08)" }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <div className="relative flex items-center gap-3">
                   <motion.div
-                    animate={{ scale: [1, 1.25, 1] }}
-                    transition={{ duration: 1.2, repeat: Infinity }}
+                    animate={{ scale: [1, 1.3, 1], rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
                     className="text-2xl"
                   >
                     🐘
                   </motion.div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-extrabold text-xs tracking-wider uppercase" style={{ color: "var(--saffron-dark)" }}>
-                      BAPPA WITHIN REACH!
+                      🚨 BAPPA WITHIN REACH!
                     </p>
-                    <p className="text-sm font-bold" style={{ color: "var(--warm-brown)" }}>
+                    <p className="text-sm font-bold truncate" style={{ color: "var(--warm-brown)" }}>
                       {closestInRange.name === "???" ? "Unknown Pandal" : closestInRange.name} •{" "}
                       {formatDistance(closestInRange.distance)}
                     </p>
                   </div>
-                  <div className="ml-auto text-xl font-bold" style={{ color: "var(--saffron-dark)" }}>
+                  <motion.div
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    className="text-xl font-bold flex-shrink-0"
+                    style={{ color: "var(--saffron-dark)" }}
+                  >
                     →
-                  </div>
+                  </motion.div>
                 </div>
               </button>
             </motion.div>
@@ -638,7 +855,7 @@ export default function MapPage() {
       )}
 
       {/* ── COMPACT QUEST CARD ── */}
-      {flow.phase === "map" && (
+      {flow.phase === "map" && !activeRoute && (
         <AnimatePresence>
           {showQuest && activeQuest && !selectedPandal && !discoveryResult && !closestInRange && (
             <motion.div
@@ -666,6 +883,8 @@ export default function MapPage() {
               isDemoMode={isDemo}
               onClose={() => setSelectedPandal(null)}
               onCheckin={handleCheckin}
+              onNavigate={handleNavigateToPandal}
+              isRouting={isRouting}
             />
           )}
         </AnimatePresence>
@@ -678,6 +897,7 @@ export default function MapPage() {
             <FamousPandalsSheet
               userLocation={userLocation}
               onSelectPandal={handleSelectFamousPandal}
+              onNavigatePandal={handleFamousPandalNavigate}
               onClose={() => setShowFamousSheet(false)}
             />
           )}
@@ -691,6 +911,7 @@ export default function MapPage() {
           scoreEarned={discoveryResult.scoreEarned}
           isRare={discoveryResult.isRare}
           newAchievements={discoveryResult.newAchievements}
+          currentStreak={streak.currentStreak}
           onDismiss={handleDiscoveryDismiss}
         />
       )}

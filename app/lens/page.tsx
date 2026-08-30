@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/shared/BottomNav";
 
+import MushakEmptyState from "@/components/mushak/MushakEmptyState";
+
 interface Photo {
   id: string;
   imageUrl: string;
@@ -131,23 +133,14 @@ export default function LensPage() {
             ))}
           </div>
         ) : photos.length === 0 ? (
-          <div className="text-center py-20">
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-6xl mb-3"
-            >
-              📸
-            </motion.div>
-            <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
-              No Moments Shared Yet
-            </h3>
-            <p className="text-xs max-w-xs mx-auto mb-5" style={{ color: "var(--muted-brown)" }}>
-              Discover a pandal on the map and be the first to capture and share a Bappa moment!
-            </p>
-            <a href="/map" className="btn-primary text-xs">
-              🗺️ EXPLORE MAP
-            </a>
+          <div className="py-12">
+            <MushakEmptyState
+              mood="curious"
+              title="No Moments Shared Yet"
+              description="Discover a pandal on the map and be the first to capture and share a Bappa moment!"
+              actionText="🗺️ EXPLORE MAP"
+              onAction={() => window.location.href = "/map"}
+            />
           </div>
         ) : (
           <div className="photo-grid pt-2">

@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import MushakCelebration from "@/components/mushak/MushakCelebration";
 
 interface DiscoveryAnimationProps {
   pandalName: string;
   scoreEarned: number;
   isRare: boolean;
   newAchievements: string[];
+  currentStreak?: number;
   onDismiss: () => void;
 }
 
@@ -53,6 +55,7 @@ export default function DiscoveryAnimation({
   scoreEarned,
   isRare,
   newAchievements,
+  currentStreak,
   onDismiss,
 }: DiscoveryAnimationProps) {
   const [showScore, setShowScore] = useState(false);
@@ -120,11 +123,14 @@ export default function DiscoveryAnimation({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="font-display font-bold mb-3"
+            className="font-display font-bold mb-2"
             style={{ fontSize: "1.45rem", color: "var(--warm-brown)" }}
           >
             {pandalName}
           </motion.h2>
+
+          {/* Mushak Celebration Badge */}
+          <MushakCelebration pandalName={pandalName} scoreEarned={scoreEarned} />
 
           {/* Score Badge */}
           {showScore && (
@@ -132,7 +138,7 @@ export default function DiscoveryAnimation({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 450, damping: 20 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-3 font-bold text-sm"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-2 font-bold text-sm"
               style={{
                 background: "linear-gradient(135deg, #FFE8D2, #FCE0DC)",
                 border: "1.5px solid var(--saffron)",
@@ -141,6 +147,24 @@ export default function DiscoveryAnimation({
             >
               <span>+{scoreEarned}</span>
               <span style={{ color: "var(--warm-brown)", fontSize: "0.8rem" }}>BAPPA XP</span>
+            </motion.div>
+          )}
+
+          {/* Streak Badge */}
+          {currentStreak && currentStreak >= 2 && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 450, damping: 20, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-2 font-bold text-sm"
+              style={{
+                background: "linear-gradient(135deg, #FFF9F1, #FFE8D2)",
+                border: "1.5px solid var(--muted-gold)",
+                color: "var(--muted-gold-dark)",
+              }}
+            >
+              <span>🔥</span>
+              <span>{currentStreak} Day Streak!</span>
             </motion.div>
           )}
 

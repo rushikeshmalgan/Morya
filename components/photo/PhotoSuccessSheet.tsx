@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 interface PhotoSuccessSheetProps {
   pandalName: string;
@@ -33,14 +34,10 @@ export default function PhotoSuccessSheet({
       >
         <div className="bottom-sheet-handle" />
 
-        <div className="text-center mb-6">
-          <motion.div
-            animate={{ scale: [1, 1.18, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-5xl mb-2"
-          >
-            🌸
-          </motion.div>
+        <div className="text-center mb-5">
+          <div className="flex justify-center mb-2">
+            <MushakAvatar mood="celebrating" size="lg" />
+          </div>
           <p
             className="text-xs font-extrabold tracking-[0.15em] uppercase mb-1"
             style={{ color: "var(--success)" }}
@@ -64,7 +61,7 @@ export default function PhotoSuccessSheet({
               color: "var(--warm-brown)",
             }}
           >
-            ✨ Your photo will appear in Bappa Lens after quick moderation!
+            ✨ Added to Bappa Lens! Fellow explorers will see your darshan photo.
           </div>
         )}
 

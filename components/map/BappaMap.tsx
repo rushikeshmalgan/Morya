@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { NearbyPandal } from "@/app/map/page";
+import { WalkingRoute } from "@/lib/routing";
 
 interface BappaMapProps {
   userLocation: { lat: number; lng: number };
@@ -13,6 +14,7 @@ interface BappaMapProps {
   isDemoMode: boolean;
   recenterKey?: number;
   flyToTarget?: { lat: number; lng: number; zoom?: number; timestamp: number } | null;
+  activeRoute?: WalkingRoute | null;
 }
 
 // Custom SVG markers with warm festival styling
@@ -129,12 +131,15 @@ export default function BappaMap({
   isDemoMode: _isDemoMode,
   recenterKey,
   flyToTarget,
+  activeRoute,
 }: BappaMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const userMarkerRef = useRef<L.Marker | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
+  const routePolylineRef = useRef<L.Polyline | null>(null);
+  const routeGlowRef = useRef<L.Polyline | null>(null);
   const initialCenterSet = useRef(false);
 
   // Smoothly fly to user location when recenterKey changes
@@ -256,6 +261,60 @@ export default function BappaMap({
       }
     });
   }, [pandals, onPandalTap]);
+
+  // Render and update active walking route
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Clean up existing route layers
+    if (routeGlowRef.current) {
+      routeGlowRef.current.remove();
+      routeGlowRef.current = null;
+    }
+    if (routePolylineRef.current) {
+      routePolylineRef.current.remove();
+      routePolylineRef.current = null;
+    }
+
+    if (activeRoute && activeRoute.coordinates.length > 0) {
+      const latlngs: L.LatLngExpression[] = activeRoute.coordinates;
+
+      // Soft warm glow underlay
+      routeGlowRef.current = L.polyline(latlngs, {
+        color: "#FFE8D2",
+        weight: 9,
+        opacity: 0.85,
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(map);
+
+      // Main saffron / marigold walking path
+      routePolylineRef.current = L.polyline(latlngs, {
+        color: "#E9784F",
+        weight: 4.5,
+        opacity: 0.95,
+        lineCap: "round",
+        lineJoin: "round",
+        dashArray: activeRoute.source === "fallback" ? "6 6" : undefined,
+      }).addTo(map);
+
+      // Fit map view to encompass the entire route comfortably
+      try {
+        const bounds = routePolylineRef.current.getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, {
+            padding: [70, 70],
+            maxZoom: 17,
+            animate: true,
+            duration: 1.2,
+          });
+        }
+      } catch {
+        // Fallback view update if bounds error
+      }
+    }
+  }, [activeRoute]);
 
   return (
     <div

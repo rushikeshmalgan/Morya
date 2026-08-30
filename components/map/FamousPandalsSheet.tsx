@@ -21,6 +21,7 @@ export interface FamousPandal {
 interface FamousPandalsSheetProps {
   userLocation: { lat: number; lng: number };
   onSelectPandal: (pandal: FamousPandal) => void;
+  onNavigatePandal?: (pandal: FamousPandal) => void;
   onClose: () => void;
 }
 
@@ -29,6 +30,7 @@ const CITIES = ["ALL", "Pune", "Mumbai", "Satara", "Nashik", "Nagpur"];
 export default function FamousPandalsSheet({
   userLocation,
   onSelectPandal,
+  onNavigatePandal,
   onClose,
 }: FamousPandalsSheetProps) {
   const [selectedCity, setSelectedCity] = useState("ALL");
@@ -227,16 +229,32 @@ export default function FamousPandalsSheet({
                   </div>
                 </div>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectPandal(pandal);
-                  }}
-                  className="btn-primary py-2 px-3 text-xs font-bold whitespace-nowrap flex items-center gap-1 flex-shrink-0"
-                  style={{ fontSize: "11px" }}
-                >
-                  <span>🎯</span> Locate
-                </button>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {onNavigatePandal && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigatePandal(pandal);
+                      }}
+                      className="btn-primary py-2 px-2.5 text-xs font-bold whitespace-nowrap flex items-center gap-1"
+                      style={{ fontSize: "11px" }}
+                      title="Show walking route on map"
+                    >
+                      <span>🧭</span> Walk
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectPandal(pandal);
+                    }}
+                    className="btn-secondary py-2 px-2.5 text-xs font-bold whitespace-nowrap flex items-center gap-1"
+                    style={{ fontSize: "11px" }}
+                    title="Locate on map"
+                  >
+                    <span>🎯</span>
+                  </button>
+                </div>
               </motion.div>
             ))
           )}

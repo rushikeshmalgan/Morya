@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 interface PhotoPromptSheetProps {
   pandalName: string;
@@ -38,7 +39,7 @@ export default function PhotoPromptSheet({
       >
         <div className="bottom-sheet-handle" />
 
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <motion.div
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -60,20 +61,23 @@ export default function PhotoPromptSheet({
           </p>
         </div>
 
+        {/* Mushak Photo Tip */}
         <div
-          className="mb-5 p-4 rounded-2xl text-center"
+          className="mb-5 p-3.5 rounded-2xl flex items-center gap-3"
           style={{
             background: "#FFE8D2",
-            border: "1px solid var(--border-gold)",
+            border: "1.5px solid var(--border-gold)",
           }}
         >
-          <p className="text-2xl mb-1">✨</p>
-          <p className="font-bold text-sm mb-0.5" style={{ color: "var(--warm-brown)" }}>
-            Capture Your Bappa Moment
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
-            Share your photo with the community in Bappa Lens and save it to your Journey album.
-          </p>
+          <MushakAvatar mood="excited" size="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-xs" style={{ color: "var(--warm-brown)" }}>
+              &quot;That&apos;s a beautiful Bappa! Capture the darshan? 📸&quot;
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--muted-brown)" }}>
+              Share with fellow explorers in Bappa Lens and save it to your Journey album.
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2.5">

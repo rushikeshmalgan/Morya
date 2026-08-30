@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import BottomNav from "@/components/shared/BottomNav";
 import { getStoredUser } from "@/lib/store";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
 
 type LeaderboardType = "global" | "city" | "squad";
 
@@ -270,15 +271,25 @@ export default function RankPage() {
           </div>
         )}
 
-        {/* My rank banner */}
+        {/* My rank banner with Mushak */}
         {myRank && (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 rounded-2xl text-center text-xs font-bold"
+            className="mb-4 p-3 rounded-2xl flex items-center gap-3"
             style={{ background: "#FFE8D2", border: "1.5px solid var(--border-gold)", color: "var(--warm-brown)" }}
           >
-            🌟 You are currently ranked <strong style={{ color: "var(--saffron-dark)" }}>#{myRank}</strong> {type === "global" ? "globally" : `in ${type}`}!
+            <MushakAvatar mood={myRank <= 3 ? "celebrating" : "proud"} size="xs" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold leading-tight">
+                {myRank <= 3
+                  ? `Top 3 Explorer! You are ranked #${myRank} ${type === "global" ? "globally" : `in ${type}`} 🔥`
+                  : `You are ranked #${myRank} ${type === "global" ? "globally" : `in ${type}`}!`}
+              </p>
+              <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-brown)" }}>
+                Discover more pandals to climb higher!
+              </p>
+            </div>
           </motion.div>
         )}
 

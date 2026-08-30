@@ -13,6 +13,20 @@ export interface BappaUser {
   uniquePandals: number;
 }
 
+const STREAK_KEY = "bappa_streak";
+
+export interface WeeklyVisitRecord {
+  week: string;
+  count: number;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastVisitDate: string | null;
+  weeklyVisits: WeeklyVisitRecord[];
+}
+
 const DEVICE_ID_KEY = "bappa_device_id";
 const USER_KEY = "bappa_user";
 const DEMO_MODE_KEY = "bappa_demo_mode";
@@ -150,4 +164,71 @@ export function setDemoMode(enabled: boolean): void {
   } else {
     localStorage.removeItem(DEMO_MODE_KEY);
   }
+}
+
+// ── Streak Utilities ──
+
+function getToday(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+export function getStreakData(): StreakData {
+  if (typeof window === "undefined") {
+    return { currentStreak: 0, longestStreak: 0, lastVisitDate: null, weeklyVisits: [] };
+  }
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    return raw ? JSON.parse(raw) : { currentStreak: 0, longestStreak: 0, lastVisitDate: null, weeklyVisits: [] };
+  } catch {
+    return { currentStreak: 0, longestStreak: 0, lastVisitDate: null, weeklyVisits: [] };
+  }
+}
+
+export function recordVisit(): StreakData {
+  const streak = getStreakData();
+  const today = getToday();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+  if (streak.lastVisitDate === today) {
+    return streak;
+  }
+
+  if (streak.lastVisitDate === yesterday) {
+    streak.currentStreak += 1;
+  } else if (streak.lastVisitDate !== today) {
+    streak.currentStreak = 1;
+  }
+
+  streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+  streak.lastVisitDate = today;
+
+  const weekStart = getWeekStart(new Date());
+  const weekKey = weekStart.toISOString().split("T")[0];
+  const weekVisits = streak.weeklyVisits || [];
+  const weekIndex = weekVisits.findIndex((w: { week: string; count: number }) => w.week === weekKey);
+  if (weekIndex >= 0) {
+    weekVisits[weekIndex].count += 1;
+  } else {
+    weekVisits.push({ week: weekKey, count: 1 });
+    if (weekVisits.length > 8) weekVisits.shift();
+  }
+  streak.weeklyVisits = weekVisits;
+
+  localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+  return streak;
+}
+
+export function getWeeklyVisitCount(): number {
+  const streak = getStreakData();
+  const weekStart = getWeekStart(new Date());
+  const weekKey = weekStart.toISOString().split("T")[0];
+  const weekData = (streak.weeklyVisits || []).find((w: { week: string; count: number }) => w.week === weekKey);
+  return weekData?.count || 0;
 }

@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/shared/BottomNav";
 import { getStoredUser, BappaUser } from "@/lib/store";
 import Image from "next/image";
+import MushakAvatar from "@/components/mushak/MushakAvatar";
+import MushakEmptyState from "@/components/mushak/MushakEmptyState";
 
 interface Visit {
   id: string;
@@ -190,17 +192,14 @@ export default function JourneyPage() {
                 ))}
               </div>
             ) : visits.length === 0 ? (
-              <div className="text-center py-14 bappa-card p-6">
-                <div className="text-5xl mb-3">🐘</div>
-                <h3 className="font-display font-bold text-lg mb-1" style={{ color: "var(--warm-brown)" }}>
-                  Your Album is Empty
-                </h3>
-                <p className="text-xs max-w-xs mx-auto mb-5" style={{ color: "var(--muted-brown)" }}>
-                  Head to the map, find pandals around you, and add them to your collection!
-                </p>
-                <a href="/map" className="btn-primary text-xs font-bold">
-                  🗺️ EXPLORE THE MAP
-                </a>
+              <div className="py-8">
+                <MushakEmptyState
+                  mood="curious"
+                  title="Your Bappa Album is Empty"
+                  description="Head to the map, discover pandals around your city, and add them to your darshan collection!"
+                  actionText="🗺️ EXPLORE THE MAP"
+                  onAction={() => window.location.href = "/map"}
+                />
               </div>
             ) : (
               <div className="space-y-3">

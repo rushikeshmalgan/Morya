@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || "bappa-admin-secret";
-
 type Tab = "pandals" | "photos";
 
 interface PendingPandal {
@@ -35,6 +33,10 @@ interface PendingPhoto {
 }
 
 export default function AdminPage() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const [activeTab, setActiveTab] = useState<Tab>("pandals");
   const [pendingPandals, setPendingPandals] = useState<PendingPandal[]>([]);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
@@ -45,16 +47,49 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/admin/proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        setAuthenticated(true);
+        setLoginError("");
+      } else {
+        const data = await res.json();
+        setLoginError(data.error || "Invalid password");
+      }
+    } catch {
+      setLoginError("Login failed");
+    }
+  };
+
+  const proxyFetch = async (action: string, method = "GET", body?: Record<string, unknown>) => {
+    const params = new URLSearchParams({ action });
+    const res = await fetch(`/api/admin/proxy?${params}`, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return res;
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const headers = { "x-admin-token": ADMIN_TOKEN };
-
-      const [pandalsRes, photosRes, statsRes] = await Promise.all([
-        fetch("/api/admin/pandals?status=PENDING", { headers }),
-        fetch("/api/admin/photos?moderationStatus=PENDING", { headers }),
-        fetch("/api/admin/stats", { headers }),
+      const [statsRes, pandalsRes, photosRes] = await Promise.all([
+        proxyFetch("stats"),
+        proxyFetch("pandals", "GET", { status: "PENDING" }),
+        proxyFetch("photos", "GET", { moderationStatus: "PENDING" }),
       ]);
+
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        setStats(data);
+      }
 
       if (pandalsRes.ok) {
         const data = await pandalsRes.json();
@@ -64,11 +99,6 @@ export default function AdminPage() {
       if (photosRes.ok) {
         const data = await photosRes.json();
         setPendingPhotos(data.photos || []);
-      }
-
-      if (statsRes.ok) {
-        const data = await statsRes.json();
-        setStats(data);
       }
     } catch {
       setError("Failed to load admin data");
@@ -84,19 +114,11 @@ export default function AdminPage() {
   const handleApprovePandal = async (pandalId: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/pandals/${pandalId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
-        },
-        body: JSON.stringify({ status: "APPROVED" }),
-      });
-
+      const res = await proxyFetch("approve_pandal", "PATCH", { action: "approve_pandal", id: pandalId });
       if (res.ok) {
         setPendingPandals((prev) => prev.filter((p) => p.id !== pandalId));
         setSelectedPandal(null);
-        setStats((s) => ({ ...s, pendingPandals: s.pendingPandals - 1, approvedPandals: s.approvedPandals + 1 }));
+        setStats((s) => ({ ...s, pendingPandals: Math.max(0, s.pendingPandals - 1), approvedPandals: s.approvedPandals + 1 }));
       }
     } catch {
       setError("Failed to approve pandal");
@@ -108,19 +130,11 @@ export default function AdminPage() {
   const handleRejectPandal = async (pandalId: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/pandals/${pandalId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
-        },
-        body: JSON.stringify({ status: "REJECTED" }),
-      });
-
+      const res = await proxyFetch("reject_pandal", "PATCH", { action: "reject_pandal", id: pandalId });
       if (res.ok) {
         setPendingPandals((prev) => prev.filter((p) => p.id !== pandalId));
         setSelectedPandal(null);
-        setStats((s) => ({ ...s, pendingPandals: s.pendingPandals - 1 }));
+        setStats((s) => ({ ...s, pendingPandals: Math.max(0, s.pendingPandals - 1) }));
       }
     } catch {
       setError("Failed to reject pandal");
@@ -132,19 +146,11 @@ export default function AdminPage() {
   const handleApprovePhoto = async (photoId: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/photos/${photoId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
-        },
-        body: JSON.stringify({ moderationStatus: "APPROVED" }),
-      });
-
+      const res = await proxyFetch("approve_photo", "PATCH", { action: "approve_photo", id: photoId });
       if (res.ok) {
         setPendingPhotos((prev) => prev.filter((p) => p.id !== photoId));
         setSelectedPhoto(null);
-        setStats((s) => ({ ...s, pendingPhotos: s.pendingPhotos - 1 }));
+        setStats((s) => ({ ...s, pendingPhotos: Math.max(0, s.pendingPhotos - 1) }));
       }
     } catch {
       setError("Failed to approve photo");
@@ -156,19 +162,11 @@ export default function AdminPage() {
   const handleRejectPhoto = async (photoId: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/admin/photos/${photoId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
-        },
-        body: JSON.stringify({ moderationStatus: "REJECTED" }),
-      });
-
+      const res = await proxyFetch("reject_photo", "PATCH", { action: "reject_photo", id: photoId });
       if (res.ok) {
         setPendingPhotos((prev) => prev.filter((p) => p.id !== photoId));
         setSelectedPhoto(null);
-        setStats((s) => ({ ...s, pendingPhotos: s.pendingPhotos - 1 }));
+        setStats((s) => ({ ...s, pendingPhotos: Math.max(0, s.pendingPhotos - 1) }));
       }
     } catch {
       setError("Failed to reject photo");
@@ -176,6 +174,38 @@ export default function AdminPage() {
       setActionLoading(false);
     }
   };
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen mandala-bg flex items-center justify-center p-6">
+        <form onSubmit={handleLogin} className="w-full max-w-sm bappa-card p-6">
+          <div className="text-center mb-6">
+            <p className="text-4xl mb-3">🔒</p>
+            <h1 className="font-display font-bold text-xl" style={{ color: "var(--warm-cream)" }}>
+              ADMIN ACCESS
+            </h1>
+            <p className="text-xs mt-2" style={{ color: "var(--fog-gray)" }}>
+              Internal use only
+            </p>
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter admin password"
+            className="bappa-input mb-3"
+            autoFocus
+          />
+          {loginError && (
+            <p className="text-xs mb-3" style={{ color: "var(--vermillion)" }}>{loginError}</p>
+          )}
+          <button type="submit" className="btn-primary w-full">
+            ACCESS DASHBOARD
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

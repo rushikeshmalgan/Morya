@@ -2,12 +2,10 @@
 
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { createClient } from "@libsql/client";
 
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL || "file:./dev.db";
-  const libsql = createClient({ url });
-  const adapter = new PrismaLibSql(libsql);
+  const adapter = new PrismaLibSql({ url });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new PrismaClient({
     adapter,

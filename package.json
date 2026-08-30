@@ -10,11 +10,12 @@
     "lint": "eslint",
     "test": "npx tsx --test --test-concurrency=1 tests/score.test.ts tests/badge.test.ts",
     "db:generate": "prisma generate",
+    "db:push": "node scripts/init-db.js",
     "db:migrate": "prisma migrate dev --name init",
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
-    "setup": "prisma generate && prisma migrate dev --name init && npm run db:seed"
+    "setup": "prisma generate && node scripts/init-db.js && npm run db:seed"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"

@@ -143,11 +143,12 @@ Open [http://localhost:3000](http://localhost:3000) — best viewed on a mobile 
 | `npm run start` | Start the production server |
 | `npm run lint` | Run ESLint |
 | `npm run db:generate` | Generate the Prisma client |
+| `npm run db:push` | Push schema directly to Neon DB |
 | `npm run db:migrate` | Run database migrations (`prisma migrate dev`) |
 | `npm run db:seed` | Seed pandals, quests, and achievements |
 | `npm run db:studio` | Open Prisma Studio |
-| `npm run db:reset` | Reset and re-seed the local database |
-| `npm run setup` | Generate client + migrate + seed in one step |
+| `npm run db:reset` | Reset and re-seed the database |
+| `npm run setup` | Generate client + push schema + seed in one step |
 
 ---
 

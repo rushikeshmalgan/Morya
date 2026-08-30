@@ -554,6 +554,7 @@ export default function MapPage() {
 
   // Closest undiscovered in-range pandal
   const closestInRange = nearbyPandals.find((p) => p.state === "in_range");
+  const hasBottomCard = Boolean(activeRoute || (closestInRange && !selectedPandal && !discoveryResult));
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ background: "#FFF4E3" }}>
@@ -571,16 +572,20 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── TOP FLOATING PLAYER CARD ── */}
+      {/* ── TOP FLOATING CONTAINER (Player Card + Active Quest Mission) ── */}
       {flow.phase === "map" && user && (
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-0 left-0 right-0 z-20 p-4 safe-top pointer-events-none"
+          className="fixed top-0 left-0 right-0 z-30 p-3 safe-top pointer-events-none space-y-2 max-w-md mx-auto"
         >
-          <div className="glass-card max-w-md mx-auto pointer-events-auto overflow-hidden" style={{ background: "rgba(255, 249, 241, 0.96)", border: "1px solid rgba(216,169,74,0.35)" }}>
-            <div className="flex items-center justify-between px-4 py-2.5">
-              <div className="flex items-center gap-3">
+          {/* Player Card */}
+          <div
+            className="glass-card pointer-events-auto overflow-hidden shadow-md"
+            style={{ background: "rgba(255, 249, 241, 0.96)", border: "1px solid rgba(216,169,74,0.35)" }}
+          >
+            <div className="flex items-center justify-between px-3.5 py-2">
+              <div className="flex items-center gap-2.5">
                 <div className="relative">
                   <span className="text-2xl">🐘</span>
                   {streak.currentStreak >= 3 && (
@@ -605,7 +610,7 @@ export default function MapPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <div className="text-center">
                   <p className="text-xs font-extrabold" style={{ color: "var(--saffron-dark)" }}>
                     {user.uniquePandals}
@@ -635,6 +640,13 @@ export default function MapPage() {
               </div>
             </div>
           </div>
+
+          {/* Compact Quest Mission Card docked under Player Card */}
+          {showQuest && activeQuest && !selectedPandal && !discoveryResult && (
+            <div className="pointer-events-auto">
+              <QuestCard quest={activeQuest} onDismiss={() => setShowQuest(false)} />
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -651,9 +663,13 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── LEFT-SIDE FLOATING BUTTONS (vertical stack above bottom nav) ── */}
+      {/* ── LEFT-SIDE FLOATING STACK (Maharaj Radar + Famous Pandals) ── */}
       {flow.phase === "map" && (
-        <div className="fixed left-3 z-30 flex flex-col gap-2" style={{ bottom: "76px" }}>
+        <div
+          className="fixed left-3 z-30 flex flex-col gap-2 transition-all duration-300"
+          style={{ bottom: hasBottomCard ? "185px" : "76px" }}
+        >
+          <MushakRadar pandals={nearbyPandals} />
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -677,11 +693,6 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* ── MUSHAK BAPPA RADAR FLOATING BUTTON ── */}
-      {flow.phase === "map" && (
-        <MushakRadar pandals={nearbyPandals} />
-      )}
-
       {/* ── MUSHAK COMPANION FLOATING BUBBLE ── */}
       {flow.phase === "map" && !selectedPandal && (
         <AnimatePresence>
@@ -699,9 +710,12 @@ export default function MapPage() {
         </AnimatePresence>
       )}
 
-      {/* ── RIGHT-SIDE FLOATING BUTTONS (vertical stack above bottom nav) ── */}
+      {/* ── RIGHT-SIDE FLOATING STACK (Locate Me + Add Pandal) ── */}
       {flow.phase === "map" && (
-        <div className="fixed right-3 z-30 flex flex-col items-center gap-2.5" style={{ bottom: "76px" }}>
+        <div
+          className="fixed right-3 z-30 flex flex-col items-center gap-2.5 transition-all duration-300"
+          style={{ bottom: hasBottomCard ? "185px" : "76px" }}
+        >
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -805,7 +819,7 @@ export default function MapPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.96 }}
           className="fixed left-4 right-4 z-30 max-w-md mx-auto"
-          style={{ bottom: "130px" }}
+          style={{ bottom: "76px" }}
         >
           <div
             className="p-3.5 rounded-2xl shadow-xl backdrop-blur-md"
@@ -888,8 +902,8 @@ export default function MapPage() {
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              className="fixed left-4 right-4 z-20"
-              style={{ bottom: "130px" }}
+              className="fixed left-4 right-4 z-20 max-w-md mx-auto"
+              style={{ bottom: "76px" }}
             >
               <button
                 id="bappa-detected-btn"
@@ -934,24 +948,6 @@ export default function MapPage() {
                   </motion.div>
                 </div>
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
-
-      {/* ── COMPACT QUEST CARD ── */}
-      {flow.phase === "map" && !activeRoute && (
-        <AnimatePresence>
-          {showQuest && activeQuest && !selectedPandal && !discoveryResult && !closestInRange && (
-            <motion.div
-              key="quest"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              className="fixed left-4 right-4 z-20"
-              style={{ bottom: "130px" }}
-            >
-              <QuestCard quest={activeQuest} onDismiss={() => setShowQuest(false)} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -8,9 +8,11 @@ import { NearbyPandal } from "@/app/map/page";
 interface MushakRadarProps {
   pandals: NearbyPandal[];
   onFocusPandal?: (pandal: NearbyPandal) => void;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export default function MushakRadar({ pandals, onFocusPandal }: MushakRadarProps) {
+export default function MushakRadar({ pandals, onFocusPandal, className, style }: MushakRadarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
@@ -42,23 +44,23 @@ export default function MushakRadar({ pandals, onFocusPandal }: MushakRadarProps
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
         onClick={handleStartScan}
-        className="fixed left-3 z-30 px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg transition-all"
+        className={className || "px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg transition-all"}
         style={{
-          bottom: "116px",
           background: "#FFF9F1",
           border: "1.5px solid rgba(216, 169, 74, 0.4)",
-          boxShadow: "0 6px 20px rgba(74, 48, 40, 0.12)",
+          boxShadow: "0 4px 14px rgba(74, 48, 40, 0.12)",
+          ...style,
         }}
         id="mushak-radar-btn"
         title="Mushak Maharaj Bappa Radar"
       >
         <MushakAvatar mood="searching" size="xs" />
-        <span className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
+        <span className="text-[10px] font-bold" style={{ color: "var(--warm-brown)" }}>
           Maharaj Radar
         </span>
         {totalVisible > 0 && (
           <span
-            className="w-4 h-4 rounded-full text-[10px] font-extrabold flex items-center justify-center text-white"
+            className="w-4 h-4 rounded-full text-[9px] font-extrabold flex items-center justify-center text-white"
             style={{ background: "var(--saffron-dark)" }}
           >
             {totalVisible}

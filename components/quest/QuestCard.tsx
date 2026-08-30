@@ -22,28 +22,39 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
   if (collapsed) {
     return (
       <div
-        className="glass-card px-4 py-2.5 flex items-center justify-between cursor-pointer"
+        className="glass-card px-3.5 py-2 flex items-center justify-between cursor-pointer shadow-md rounded-2xl"
         onClick={() => setCollapsed(false)}
-        style={{ background: "rgba(255, 249, 241, 0.95)" }}
+        style={{
+          background: "rgba(255, 249, 241, 0.96)",
+          border: "1.5px solid rgba(216, 169, 74, 0.45)",
+          boxShadow: "0 4px 16px rgba(74, 48, 40, 0.1)",
+        }}
       >
         <div className="flex items-center gap-2">
           <MushakAvatar mood="pointing" size="xs" />
-          <span className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
-            Mushak Maharaj&apos;s Mission: {quest.title} ({quest.progress}/{quest.requirement})
+          <span className="text-[11px] font-bold truncate max-w-[220px]" style={{ color: "var(--warm-brown)" }}>
+            🐭 Mission: {quest.title} ({quest.progress}/{quest.requirement})
           </span>
         </div>
-        <span className="text-xs" style={{ color: "var(--muted-brown)" }}>▲</span>
+        <span className="text-xs font-bold" style={{ color: "var(--saffron-dark)" }}>▲</span>
       </div>
     );
   }
 
   return (
-    <div className="quest-card">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+    <div
+      className="glass-card p-3 shadow-md rounded-2xl"
+      style={{
+        background: "rgba(255, 249, 241, 0.96)",
+        border: "1.5px solid rgba(216, 169, 74, 0.45)",
+        boxShadow: "0 4px 16px rgba(74, 48, 40, 0.1)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
           <MushakAvatar mood={quest.completed ? "celebrating" : "pointing"} size="xs" />
           <p
-            className="text-[11px] font-extrabold tracking-[0.12em] uppercase"
+            className="text-[10px] font-extrabold tracking-[0.1em] uppercase"
             style={{ color: "var(--saffron-dark)" }}
           >
             MUSHAK MAHARAJ&apos;S MISSION
@@ -52,29 +63,31 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={(e) => { e.stopPropagation(); setCollapsed(true); }}
-            className="text-xs px-1.5 py-0.5 rounded text-gray-500 hover:text-gray-800 transition-colors"
+            className="text-[10px] px-1.5 py-0.5 rounded font-bold"
+            style={{ color: "var(--muted-brown)" }}
             title="Minimize"
           >
             ▼
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-            className="text-base px-1.5 py-0.5 leading-none text-gray-400 hover:text-gray-700 transition-colors"
+            className="text-xs px-1.5 py-0.5 leading-none font-bold"
+            style={{ color: "var(--muted-brown)" }}
             title="Dismiss"
           >
-            ×
+            ✕
           </button>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <h3
-          className="font-bold text-sm"
+          className="font-bold text-xs truncate max-w-[220px]"
           style={{ color: "var(--warm-brown)" }}
         >
           {quest.title}
         </h3>
-        <span className="text-xs font-bold" style={{ color: "var(--saffron-dark)" }}>
+        <span className="text-[11px] font-extrabold" style={{ color: "var(--saffron-dark)" }}>
           {quest.progress} / {quest.requirement}
         </span>
       </div>
@@ -83,19 +96,19 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
-          className="flex items-center gap-2 py-1"
+          className="flex items-center gap-1.5 py-0.5"
         >
-          <span className="text-base">🎉</span>
+          <span className="text-sm">🎉</span>
           <span
-            className="font-bold text-xs"
+            className="font-bold text-[11px]"
             style={{ color: "var(--success)" }}
           >
-            Mission Complete! Mushak Maharaj is proud of you! +XP earned
+            Mission Complete! +XP earned
           </span>
         </motion.div>
       ) : (
         <>
-          <div className="quest-progress-bar mb-2">
+          <div className="quest-progress-bar mb-1.5" style={{ height: "5px" }}>
             <motion.div
               className="quest-progress-fill"
               initial={{ width: 0 }}
@@ -103,12 +116,12 @@ export default function QuestCard({ quest, onDismiss }: QuestCardProps) {
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
-          <p className="text-[11px] flex items-center gap-1" style={{ color: "var(--muted-brown)" }}>
+          <p className="text-[10px] flex items-center gap-1 font-medium" style={{ color: "var(--muted-brown)" }}>
             <span>🐭</span>
-            <span>
+            <span className="truncate">
               {remaining === 1
-                ? "Arre bhau, just 1 more Bappa to complete today's mission!"
-                : `Find ${remaining} nearby pandals to claim bonus XP!`}
+                ? "Just 1 more Bappa to complete today's mission!"
+                : `Find ${remaining} nearby pandals to complete!`}
             </span>
           </p>
         </>

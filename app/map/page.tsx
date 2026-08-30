@@ -651,29 +651,30 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── FAMOUS PANDALS FLOATING BUTTON ── */}
+      {/* ── LEFT-SIDE FLOATING BUTTONS (vertical stack above bottom nav) ── */}
       {flow.phase === "map" && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3, type: "spring" }}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.94 }}
-          onClick={() => setShowFamousSheet(true)}
-          className="fixed bottom-20 left-4 z-30 px-3.5 py-2.5 rounded-2xl flex items-center gap-2 shadow-lg transition-all"
-          style={{
-            background: "#FFF9F1",
-            border: "1.5px solid rgba(216, 169, 74, 0.4)",
-            boxShadow: "0 6px 20px rgba(74, 48, 40, 0.12)",
-          }}
-          id="famous-pandals-btn"
-          title="Explore Famous & Iconic Pandals"
-        >
-          <span className="text-base">👑</span>
-          <span className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
-            Famous Pandals
-          </span>
-        </motion.button>
+        <div className="fixed left-3 z-30 flex flex-col gap-2" style={{ bottom: "76px" }}>
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, type: "spring" }}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => setShowFamousSheet(true)}
+            className="px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg"
+            style={{
+              background: "#FFF9F1",
+              border: "1.5px solid rgba(216, 169, 74, 0.4)",
+              boxShadow: "0 4px 14px rgba(74, 48, 40, 0.12)",
+            }}
+            id="famous-pandals-btn"
+            title="Explore Famous & Iconic Pandals"
+          >
+            <span className="text-sm">👑</span>
+            <span className="text-[10px] font-bold" style={{ color: "var(--warm-brown)" }}>
+              Famous
+            </span>
+          </motion.button>
+        </div>
       )}
 
       {/* ── MUSHAK BAPPA RADAR FLOATING BUTTON ── */}
@@ -698,70 +699,67 @@ export default function MapPage() {
         </AnimatePresence>
       )}
 
-      {/* ── GOOGLE MAPS STYLE LOCATE ME BUTTON ── */}
+      {/* ── RIGHT-SIDE FLOATING BUTTONS (vertical stack above bottom nav) ── */}
       {flow.phase === "map" && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.35, type: "spring" }}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={handleLocateMe}
-          disabled={isLocating}
-          className="fixed bottom-36 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all"
-          style={{
-            background: "#FFF9F1",
-            border: "1.5px solid rgba(216, 169, 74, 0.4)",
-            boxShadow: "0 6px 20px rgba(74, 48, 40, 0.15)",
-          }}
-          id="locate-me-btn"
-          title="Recenter on my location"
-        >
-          {isLocating ? (
-            <span className="inline-block animate-spin text-lg">⏳</span>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#E9784F"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="7" />
-              <polyline points="12 2 12 5" />
-              <polyline points="12 19 12 22" />
-              <polyline points="2 12 5 12" />
-              <polyline points="19 12 22 12" />
-              <circle cx="12" cy="12" r="2.5" fill="#E9784F" />
-            </svg>
-          )}
-        </motion.button>
-      )}
+        <div className="fixed right-3 z-30 flex flex-col items-center gap-2.5" style={{ bottom: "76px" }}>
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.35, type: "spring" }}
+            whileTap={{ scale: 0.92 }}
+            onClick={handleLocateMe}
+            disabled={isLocating}
+            className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg"
+            style={{
+              background: "#FFF9F1",
+              border: "1.5px solid rgba(216, 169, 74, 0.4)",
+              boxShadow: "0 4px 14px rgba(74, 48, 40, 0.15)",
+            }}
+            id="locate-me-btn"
+            title="Recenter on my location"
+          >
+            {isLocating ? (
+              <span className="inline-block animate-spin text-base">⏳</span>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#E9784F"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="7" />
+                <polyline points="12 2 12 5" />
+                <polyline points="12 19 12 22" />
+                <polyline points="2 12 5 12" />
+                <polyline points="19 12 22 12" />
+                <circle cx="12" cy="12" r="2.5" fill="#E9784F" />
+              </svg>
+            )}
+          </motion.button>
 
-      {/* ── ADD PANDAL FLOATING ACTION BUTTON ── */}
-      {flow.phase === "map" && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring" }}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleAddPandal}
-          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-xl"
-          style={{
-            background: "linear-gradient(135deg, #E9784F, #E0673B)",
-            border: "2.5px solid #FFFFFF",
-            boxShadow: "0 8px 25px rgba(233, 120, 79, 0.45)",
-          }}
-          id="add-pandal-fab"
-          title="Add a Pandal"
-        >
-          🐘
-        </motion.button>
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, type: "spring" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleAddPandal}
+            className="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-xl"
+            style={{
+              background: "linear-gradient(135deg, #E9784F, #E0673B)",
+              border: "2.5px solid #FFFFFF",
+              boxShadow: "0 6px 20px rgba(233, 120, 79, 0.45)",
+            }}
+            id="add-pandal-fab"
+            title="Add a Pandal"
+          >
+            🐘
+          </motion.button>
+        </div>
       )}
 
       {/* ── DEMO BANNER ── */}
@@ -807,7 +805,7 @@ export default function MapPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.96 }}
           className="fixed left-4 right-4 z-30 max-w-md mx-auto"
-          style={{ bottom: "88px" }}
+          style={{ bottom: "130px" }}
         >
           <div
             className="p-3.5 rounded-2xl shadow-xl backdrop-blur-md"
@@ -891,7 +889,7 @@ export default function MapPage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               className="fixed left-4 right-4 z-20"
-              style={{ bottom: "88px" }}
+              style={{ bottom: "130px" }}
             >
               <button
                 id="bappa-detected-btn"
@@ -951,7 +949,7 @@ export default function MapPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
               className="fixed left-4 right-4 z-20"
-              style={{ bottom: "88px" }}
+              style={{ bottom: "130px" }}
             >
               <QuestCard quest={activeQuest} onDismiss={() => setShowQuest(false)} />
             </motion.div>

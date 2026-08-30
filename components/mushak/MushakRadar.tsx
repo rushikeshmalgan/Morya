@@ -42,8 +42,9 @@ export default function MushakRadar({ pandals, onFocusPandal }: MushakRadarProps
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
         onClick={handleStartScan}
-        className="fixed bottom-36 left-4 z-30 px-3 py-2 rounded-2xl flex items-center gap-2 shadow-lg transition-all"
+        className="fixed left-3 z-30 px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg transition-all"
         style={{
+          bottom: "116px",
           background: "#FFF9F1",
           border: "1.5px solid rgba(216, 169, 74, 0.4)",
           boxShadow: "0 6px 20px rgba(74, 48, 40, 0.12)",

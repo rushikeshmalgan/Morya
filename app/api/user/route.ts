@@ -70,7 +70,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("POST /api/user error:", error);
     return NextResponse.json(
-      { error: "Failed to create user" },
+      {
+        error: "Failed to create user",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

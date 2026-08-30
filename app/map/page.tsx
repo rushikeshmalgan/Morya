@@ -663,13 +663,12 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── LEFT-SIDE FLOATING STACK (Maharaj Radar + Famous Pandals) ── */}
+      {/* ── LEFT-SIDE FLOATING ROW (Famous Pandals + Maharaj Radar side-by-side) ── */}
       {flow.phase === "map" && (
         <div
-          className="fixed left-3 z-30 flex flex-col gap-2 transition-all duration-300"
+          className="fixed left-3 z-30 flex items-center gap-2 transition-all duration-300"
           style={{ bottom: hasBottomCard ? "185px" : "76px" }}
         >
-          <MushakRadar pandals={nearbyPandals} />
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -690,6 +689,8 @@ export default function MapPage() {
               Famous
             </span>
           </motion.button>
+
+          <MushakRadar pandals={nearbyPandals} />
         </div>
       )}
 

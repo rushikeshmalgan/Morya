@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import BappaLoader from "@/components/shared/BappaLoader";
 
 export interface FamousPandal {
   id: string;
@@ -43,8 +42,8 @@ export default function FamousPandalsSheet({
     async function fetchFamous() {
       setLoading(true);
       try {
-        const url = selectedCity === "ALL" 
-          ? "/api/pandals/famous" 
+        const url = selectedCity === "ALL"
+          ? "/api/pandals/famous"
           : `/api/pandals/famous?city=${encodeURIComponent(selectedCity)}`;
         const res = await fetch(url);
         const data = await res.json();
@@ -68,9 +67,9 @@ export default function FamousPandalsSheet({
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((userLocation.lat * Math.PI) / 180) *
-        Math.cos((lat * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
+      Math.cos((lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const dist = R * c;
     return dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`;
@@ -142,15 +141,15 @@ export default function FamousPandalsSheet({
               style={
                 selectedCity === c
                   ? {
-                      background: "linear-gradient(135deg, #E9784F, #E0673B)",
-                      color: "#FFFFFF",
-                      boxShadow: "0 3px 10px rgba(233,120,79,0.3)",
-                    }
+                    background: "linear-gradient(135deg, #E9784F, #E0673B)",
+                    color: "#FFFFFF",
+                    boxShadow: "0 3px 10px rgba(233,120,79,0.3)",
+                  }
                   : {
-                      background: "#FFE8D2",
-                      color: "var(--muted-brown)",
-                      border: "1px solid var(--border-cream)",
-                    }
+                    background: "#FFE8D2",
+                    color: "var(--muted-brown)",
+                    border: "1px solid var(--border-cream)",
+                  }
               }
             >
               {c === "ALL" ? "All Cities" : c}
@@ -161,11 +160,12 @@ export default function FamousPandalsSheet({
         {/* List of Pandals */}
         <div className="flex-1 overflow-y-auto space-y-2.5 pr-1" style={{ maxHeight: "48vh" }}>
           {loading ? (
-            <BappaLoader
-              size="md"
-              message="Summoning Iconic Pandals..."
-              subMessage="Fetching history and coordinates across Maharashtra"
-            />
+            <div className="text-center py-12">
+              <div className="text-3xl mb-2 animate-bounce">🐘</div>
+              <p className="text-xs font-semibold" style={{ color: "var(--muted-brown)" }}>
+                Loading iconic pandals...
+              </p>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-10 bappa-card p-6">
               <p className="text-2xl mb-2">🔍</p>

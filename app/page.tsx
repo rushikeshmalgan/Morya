@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import BappaLoader from "@/components/shared/BappaLoader";
 
 export default function Home() {
   const router = useRouter();
@@ -17,10 +16,11 @@ export default function Home() {
   }, [router]);
 
   return (
-    <BappaLoader
-      message="Entering Bappa Sanctuary..."
-      subMessage="Connecting to divine radar across the gallis"
-      size="fullscreen"
-    />
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 mandala-bg">
+      <div className="text-6xl animate-bounce">🐘</div>
+      <p className="text-lg font-medium" style={{ color: "var(--fog-gray)" }}>
+        Loading Bappa Mode...
+      </p>
+    </div>
   );
 }

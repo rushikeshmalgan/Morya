@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { getOrCreateDeviceId, getStoredUser, saveUser } from "@/lib/store";
-import BappaLoader from "@/components/shared/BappaLoader";
 
 import MushakAvatar from "@/components/mushak/MushakAvatar";
 
@@ -98,8 +97,8 @@ export default function OnboardingPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6 mandala-bg">
         <motion.div
-          animate={{ 
-            scale: [1, 1.15, 1], 
+          animate={{
+            scale: [1, 1.15, 1],
             rotate: [0, 8, -8, 0],
             y: [0, -8, 0]
           }}
@@ -108,7 +107,7 @@ export default function OnboardingPage() {
         >
           <MushakAvatar mood="excited" size="xl" />
         </motion.div>
-        <motion.p 
+        <motion.p
           className="text-base font-semibold text-center"
           style={{ color: "var(--muted-brown)" }}
           animate={{ opacity: [0.6, 1, 0.6] }}
@@ -129,9 +128,9 @@ export default function OnboardingPage() {
         transition={{ type: "spring", stiffness: 220, damping: 22 }}
         className="w-full max-w-sm"
       >
-        <div 
+        <div
           className="bappa-card p-6 text-center relative overflow-hidden"
-          style={{ 
+          style={{
             background: "linear-gradient(135deg, #FFF9F1 0%, #FFE8D2 100%)",
             border: "2px solid var(--border-gold)",
           }}
@@ -141,10 +140,10 @@ export default function OnboardingPage() {
           <div className="absolute top-3 right-3 text-lg opacity-30">✨</div>
           <div className="absolute bottom-3 left-3 text-lg opacity-30">🪷</div>
           <div className="absolute bottom-3 right-3 text-lg opacity-30">🪷</div>
-          
+
           <div className="flex justify-center items-center gap-3 mb-3">
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.08, 1],
                 rotate: [0, 4, -4, 0]
               }}
@@ -156,8 +155,8 @@ export default function OnboardingPage() {
             <div className="w-1 h-8 bg-amber-200/60 rounded-full" />
             <MushakAvatar mood="excited" size="lg" />
           </div>
-          
-          <h1 
+
+          <h1
             className="text-2xl sm:text-3xl font-bold font-display tracking-tight mb-1"
             style={{ color: "var(--warm-brown)" }}
           >
@@ -165,7 +164,7 @@ export default function OnboardingPage() {
           </h1>
 
           {/* Mushak Speech Box */}
-          <div 
+          <div
             className="p-3 rounded-2xl my-3 text-left flex items-start gap-2.5"
             style={{
               background: "rgba(255, 249, 241, 0.9)",
@@ -182,17 +181,17 @@ export default function OnboardingPage() {
               </p>
             </div>
           </div>
-          
-          <p 
+
+          <p
             className="text-xs mb-3 max-w-xs mx-auto leading-relaxed"
             style={{ color: "var(--muted-brown)" }}
           >
             Discover pandals across Maharashtra, earn XP & climb the leaderboard.
           </p>
 
-          <div 
+          <div
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold"
-            style={{ 
+            style={{
               background: "linear-gradient(135deg, #FFE8D2, #FCE0DC)",
               border: "1.5px solid var(--saffron)",
               color: "var(--saffron-dark)",
@@ -212,9 +211,9 @@ export default function OnboardingPage() {
         className="w-full max-w-sm"
       >
         {suggestedCity && (
-          <div 
+          <div
             className="bappa-card p-5 mb-4"
-            style={{ 
+            style={{
               background: "rgba(255, 249, 241, 0.95)",
               border: "1.5px solid var(--border-gold)",
             }}
@@ -280,9 +279,9 @@ export default function OnboardingPage() {
         )}
 
         {!suggestedCity && (
-          <div 
+          <div
             className="bappa-card p-5"
-            style={{ 
+            style={{
               background: "rgba(255, 249, 241, 0.95)",
               border: "1.5px solid var(--border-gold)",
             }}
@@ -349,13 +348,15 @@ export default function OnboardingPage() {
         )}
       </motion.button>
 
-      {loading && (
-        <BappaLoader
-          message="Entering Bappa Sanctuary..."
-          subMessage="Forging your sacred identity & explorer number"
-          size="fullscreen"
-        />
-      )}
+      <motion.p
+        className="text-[10px] text-center max-w-xs"
+        style={{ color: "var(--muted-brown)", opacity: 0.7 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        By continuing, you agree to explore responsibly and respect all pandal guidelines.
+      </motion.p>
     </div>
   );
 }

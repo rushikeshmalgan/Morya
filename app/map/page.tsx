@@ -13,6 +13,7 @@ import PhotoCaptureSheet from "@/components/photo/PhotoCaptureSheet";
 import PhotoPreviewSheet from "@/components/photo/PhotoPreviewSheet";
 import PhotoSuccessSheet from "@/components/photo/PhotoSuccessSheet";
 import AddPandalSheet from "@/components/pandals/AddPandalSheet";
+import FamousPandalsSheet, { FamousPandal } from "@/components/map/FamousPandalsSheet";
 import { getStoredUser, isDemoMode, BappaUser } from "@/lib/store";
 import { formatDistance } from "@/lib/geo";
 
@@ -85,6 +86,8 @@ export default function MapPage() {
   const [locationDenied, setLocationDenied] = useState(false);
   const [recenterKey, setRecenterKey] = useState(0);
   const [isLocating, setIsLocating] = useState(false);
+  const [showFamousSheet, setShowFamousSheet] = useState(false);
+  const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number; zoom?: number; timestamp: number } | null>(null);
   const [flow, setFlow] = useState<FlowStep>({ phase: "map" });
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [_pendingPhotoPreview, setPendingPhotoPreview] = useState<string>("");
@@ -120,6 +123,31 @@ export default function MapPage() {
       setRecenterKey((k) => k + 1);
       setTimeout(() => setIsLocating(false), 300);
     }
+  };
+
+  const handleSelectFamousPandal = (pandal: FamousPandal) => {
+    setShowFamousSheet(false);
+    // Smoothly fly map to famous pandal coordinates
+    setFlyToTarget({ lat: pandal.latitude, lng: pandal.longitude, zoom: 16, timestamp: Date.now() });
+    fetchNearby(pandal.latitude, pandal.longitude);
+
+    // Open pandal details bottom sheet
+    handlePandalTap({
+      id: pandal.id,
+      name: pandal.name,
+      description: pandal.description,
+      latitude: pandal.latitude,
+      longitude: pandal.longitude,
+      address: pandal.address,
+      city: pandal.city,
+      aartiTimes: pandal.aartiTimes ? JSON.stringify(pandal.aartiTimes) : null,
+      isRare: pandal.isRare,
+      isNew: false,
+      visitCount: pandal.visitCount || 0,
+      photoCount: pandal.imageUrl ? 1 : 0,
+      distance: 0,
+      state: "revealed",
+    });
   };
 
   useEffect(() => {
@@ -388,6 +416,7 @@ export default function MapPage() {
           checkinRadius={checkinRadius}
           isDemoMode={isDemo}
           recenterKey={recenterKey}
+          flyToTarget={flyToTarget}
         />
       )}
 
@@ -445,6 +474,31 @@ export default function MapPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── FAMOUS PANDALS FLOATING BUTTON ── */}
+      {flow.phase === "map" && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring" }}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => setShowFamousSheet(true)}
+          className="fixed bottom-20 left-4 z-30 px-3.5 py-2.5 rounded-2xl flex items-center gap-2 shadow-lg transition-all"
+          style={{
+            background: "#FFF9F1",
+            border: "1.5px solid rgba(216, 169, 74, 0.4)",
+            boxShadow: "0 6px 20px rgba(74, 48, 40, 0.12)",
+          }}
+          id="famous-pandals-btn"
+          title="Explore Famous & Iconic Pandals"
+        >
+          <span className="text-base">👑</span>
+          <span className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
+            Famous Pandals
+          </span>
+        </motion.button>
       )}
 
       {/* ── GOOGLE MAPS STYLE LOCATE ME BUTTON ── */}
@@ -612,6 +666,19 @@ export default function MapPage() {
               isDemoMode={isDemo}
               onClose={() => setSelectedPandal(null)}
               onCheckin={handleCheckin}
+            />
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* ── FAMOUS PANDALS EXPLORER MODAL SHEET ── */}
+      {flow.phase === "map" && (
+        <AnimatePresence>
+          {showFamousSheet && userLocation && (
+            <FamousPandalsSheet
+              userLocation={userLocation}
+              onSelectPandal={handleSelectFamousPandal}
+              onClose={() => setShowFamousSheet(false)}
             />
           )}
         </AnimatePresence>

@@ -162,14 +162,33 @@ export default function OnboardingPage() {
           </div>
 
           {city !== suggestedCity && (
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g. Pune, Mumbai, Nashik..."
-              className="mt-3 w-full bappa-input text-sm"
-              autoFocus
-            />
+            <div>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g. Pune, Mumbai, Satara..."
+                className="mt-3 w-full bappa-input text-sm"
+                autoFocus
+              />
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {["Pune", "Mumbai", "Satara", "Nashik", "Nagpur"].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCity(c)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                    style={{
+                      background: city === c ? "var(--saffron)" : "#FFE8D2",
+                      color: city === c ? "#FFFFFF" : "var(--warm-brown)",
+                      border: "1px solid var(--border-cream)",
+                    }}
+                  >
+                    📍 {c}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </motion.div>
       )}
@@ -187,9 +206,26 @@ export default function OnboardingPage() {
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            placeholder="e.g. Pune, Mumbai, Nagpur..."
+            placeholder="e.g. Pune, Mumbai, Satara, Nagpur..."
             className="w-full bappa-input text-sm"
           />
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {["Pune", "Mumbai", "Satara", "Nashik", "Nagpur"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCity(c)}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                style={{
+                  background: city === c ? "var(--saffron)" : "#FFE8D2",
+                  color: city === c ? "#FFFFFF" : "var(--warm-brown)",
+                  border: "1px solid var(--border-cream)",
+                }}
+              >
+                📍 {c}
+              </button>
+            ))}
+          </div>
         </motion.div>
       )}
 

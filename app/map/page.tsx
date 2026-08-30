@@ -22,6 +22,7 @@ import MushakRadar from "@/components/mushak/MushakRadar";
 import { getMushakDialogue, shouldShowMushakTip, MushakDialogue } from "@/lib/mushak";
 import ProximityAlertBanner, { ProximityAlert } from "@/components/map/ProximityAlertBanner";
 import { triggerHaptic, playFestiveChime, sendPandalNotification, requestNotificationPermission } from "@/lib/haptics";
+import DownloadApkButton from "@/components/shared/DownloadApkButton";
 
 // Dynamic import of map (no SSR — Leaflet requires browser)
 const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
@@ -663,10 +664,10 @@ export default function MapPage() {
         />
       )}
 
-      {/* ── LEFT-SIDE FLOATING ROW (Famous Pandals + Maharaj Radar side-by-side) ── */}
+      {/* ── LEFT-SIDE FLOATING ROW (Famous Pandals + Maharaj Radar + Download APK) ── */}
       {flow.phase === "map" && (
         <div
-          className="fixed left-3 z-30 flex items-center gap-2 transition-all duration-300"
+          className="fixed left-3 z-30 flex items-center gap-1.5 transition-all duration-300"
           style={{ bottom: hasBottomCard ? "185px" : "76px" }}
         >
           <motion.button
@@ -675,7 +676,7 @@ export default function MapPage() {
             transition={{ delay: 0.3, type: "spring" }}
             whileTap={{ scale: 0.94 }}
             onClick={() => setShowFamousSheet(true)}
-            className="px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-lg"
+            className="px-2.5 py-2 rounded-2xl flex items-center gap-1 shadow-lg"
             style={{
               background: "#FFF9F1",
               border: "1.5px solid rgba(216, 169, 74, 0.4)",
@@ -691,6 +692,8 @@ export default function MapPage() {
           </motion.button>
 
           <MushakRadar pandals={nearbyPandals} />
+
+          <DownloadApkButton variant="compact" />
         </div>
       )}
 

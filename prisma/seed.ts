@@ -3,7 +3,11 @@ import { PrismaClient, PandalStatus, QuestType } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { BADGE_DEFINITIONS } from "../lib/badge-config";
 
-const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || "file:./dev.db" });
+const authToken = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL || "file:./dev.db",
+  ...(authToken ? { authToken } : {}),
+});
 const prisma = new PrismaClient({ adapter });
 
 

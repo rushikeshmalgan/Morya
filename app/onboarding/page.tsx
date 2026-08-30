@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { getOrCreateDeviceId, getStoredUser, saveUser } from "@/lib/store";
+import BappaLoader from "@/components/shared/BappaLoader";
 
 import MushakAvatar from "@/components/mushak/MushakAvatar";
 
@@ -348,15 +349,13 @@ export default function OnboardingPage() {
         )}
       </motion.button>
 
-      <motion.p 
-        className="text-[10px] text-center max-w-xs"
-        style={{ color: "var(--muted-brown)", opacity: 0.7 }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        By continuing, you agree to explore responsibly and respect all pandal guidelines.
-      </motion.p>
+      {loading && (
+        <BappaLoader
+          message="Entering Bappa Sanctuary..."
+          subMessage="Forging your sacred identity & explorer number"
+          size="fullscreen"
+        />
+      )}
     </div>
   );
 }

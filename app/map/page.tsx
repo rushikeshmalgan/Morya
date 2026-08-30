@@ -28,21 +28,30 @@ const BappaMap = dynamic(() => import("@/components/map/BappaMap"), {
   ssr: false,
   loading: () => (
     <div
-      className="w-full h-full flex items-center justify-center"
-      style={{ background: "#FFF4E3" }}
+      className="w-full h-full flex flex-col items-center justify-center p-6 text-center"
+      style={{ background: "radial-gradient(circle at center, #FFF9F1 0%, #FFE8D2 100%)" }}
     >
-      <div className="text-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="text-5xl mb-3"
+      <div className="relative mb-3">
+        <div
+          className="w-24 h-24 rounded-full overflow-hidden shadow-xl border-3 bg-black flex items-center justify-center"
+          style={{ borderColor: "var(--border-gold)" }}
         >
-          🐘
-        </motion.div>
-        <p className="text-sm font-semibold" style={{ color: "var(--muted-brown)" }}>
-          Loading Bappa Map...
-        </p>
+          <video
+            src="/videos/loading-magic.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover scale-110"
+          />
+        </div>
       </div>
+      <p className="text-xs font-bold" style={{ color: "var(--warm-brown)" }}>
+        Awakening Divine Map...
+      </p>
+      <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-brown)" }}>
+        Plotting sacred pandals across the streets
+      </p>
     </div>
   ),
 });

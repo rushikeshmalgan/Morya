@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import BappaLoader from "@/components/shared/BappaLoader";
 
 export interface FamousPandal {
   id: string;
@@ -160,12 +161,11 @@ export default function FamousPandalsSheet({
         {/* List of Pandals */}
         <div className="flex-1 overflow-y-auto space-y-2.5 pr-1" style={{ maxHeight: "48vh" }}>
           {loading ? (
-            <div className="text-center py-12">
-              <div className="text-3xl mb-2 animate-bounce">🐘</div>
-              <p className="text-xs font-semibold" style={{ color: "var(--muted-brown)" }}>
-                Loading iconic pandals...
-              </p>
-            </div>
+            <BappaLoader
+              size="md"
+              message="Summoning Iconic Pandals..."
+              subMessage="Fetching history and coordinates across Maharashtra"
+            />
           ) : filtered.length === 0 ? (
             <div className="text-center py-10 bappa-card p-6">
               <p className="text-2xl mb-2">🔍</p>

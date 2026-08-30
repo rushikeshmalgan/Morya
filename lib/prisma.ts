@@ -1,19 +1,24 @@
-// lib/prisma.ts — Prisma 7 singleton with LibSQL adapter (SQLite dev / Turso prod)
+// lib/prisma.ts — Prisma 7 singleton with PostgreSQL / Neon DB adapter
 
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL || "file:./dev.db";
-  const authToken = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
-  const adapter = new PrismaLibSql({
-    url,
-    ...(authToken ? { authToken } : {}),
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.warn("[Prisma] DATABASE_URL is not set in environment.");
+  }
+
+  const pool = new Pool({
+    connectionString: connectionString || undefined,
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === "development" ? ["warn"] : [],
+    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 }
 
@@ -23,3 +28,4 @@ const globalForPrisma = globalThis as unknown as {
 
 export const prisma: PrismaClient =
   globalForPrisma.prisma ?? (globalForPrisma.prisma = createPrismaClient());
+

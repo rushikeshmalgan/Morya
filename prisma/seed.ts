@@ -1,13 +1,15 @@
 // Prisma Seed — 50 Ganpati Pandals across Pune, Mumbai, Nashik, Nagpur
+import "dotenv/config";
 import { PrismaClient, PandalStatus, QuestType } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { BADGE_DEFINITIONS } from "../lib/badge-config";
 
-const authToken = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL || "file:./dev.db",
-  ...(authToken ? { authToken } : {}),
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({
+  connectionString: connectionString || undefined,
 });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 

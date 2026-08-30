@@ -84,7 +84,7 @@ Warm cream, soft peach, saffron, terracotta, muted gold, warm brown, and soft gr
 | Animation | Framer Motion |
 | Maps | Leaflet + React-Leaflet, CartoDB tiles |
 | Routing | OSRM road-network walking directions with a haversine fallback |
-| Database | Prisma 7 (driver adapters) over SQLite locally / hosted libSQL (e.g. Turso) in production |
+| Database | Prisma 7 (@prisma/adapter-pg) over Neon DB / PostgreSQL |
 | Identity | Anonymous device UUID + server-issued opaque session tokens (not JWT) |
 | Image Storage | Provider-agnostic abstraction — local filesystem in dev, S3-compatible storage in production |
 | Deployment | Vercel |

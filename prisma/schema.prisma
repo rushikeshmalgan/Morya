@@ -1,5 +1,5 @@
 // Bappa Mode - Prisma Schema
-// Database: SQLite (dev) / PostgreSQL (prod)
+// Database: PostgreSQL (Neon DB)
 // Connection config is in prisma.config.ts (Prisma 7+)
 
 generator client {
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ─────────────────────────────────────────────

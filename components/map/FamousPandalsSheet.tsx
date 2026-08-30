@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import BappaLoader from "@/components/shared/BappaLoader";
+import DownloadApkButton from "@/components/shared/DownloadApkButton";
 
 export interface FamousPandal {
   id: string;
@@ -111,13 +113,16 @@ export default function FamousPandalsSheet({
               Explore legendary Bappas across Maharashtra
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{ background: "#FFE8D2", color: "var(--warm-brown)" }}
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            <DownloadApkButton variant="compact" />
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+              style={{ background: "#FFE8D2", color: "var(--warm-brown)" }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Search Bar */}

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { getOrCreateDeviceId, getStoredUser, saveUser } from "@/lib/store";
-
 import MushakAvatar from "@/components/mushak/MushakAvatar";
+import DownloadApkButton from "@/components/shared/DownloadApkButton";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -347,6 +347,15 @@ export default function OnboardingPage() {
           "ENTER BAPPA MODE 🐘"
         )}
       </motion.button>
+
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="w-full max-w-sm"
+      >
+        <DownloadApkButton variant="button" />
+      </motion.div>
 
       <motion.p
         className="text-[10px] text-center max-w-xs"

@@ -6,6 +6,7 @@ import BottomNav from "@/components/shared/BottomNav";
 import { getStoredUser, BappaUser } from "@/lib/store";
 import Image from "next/image";
 import MushakEmptyState from "@/components/mushak/MushakEmptyState";
+import DownloadApkButton from "@/components/shared/DownloadApkButton";
 
 interface Visit {
   id: string;
@@ -162,6 +163,11 @@ export default function JourneyPage() {
             </button>
           </motion.div>
         )}
+
+        {/* Download Android APK Banner */}
+        <div className="mb-4">
+          <DownloadApkButton variant="banner" />
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-2 p-1 rounded-2xl bappa-card mb-4" style={{ background: "rgba(255, 249, 241, 0.95)" }}>

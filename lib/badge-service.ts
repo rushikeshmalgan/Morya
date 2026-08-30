@@ -49,6 +49,18 @@ export class BadgeService {
 
     if (!achievement) return null;
 
+    // Check if user already unlocked this badge
+    const existing = await client.userAchievement.findUnique({
+      where: {
+        userId_achievementId: {
+          userId,
+          achievementId: achievement.id,
+        },
+      },
+    });
+
+    if (existing) return null;
+
     try {
       const created = await client.userAchievement.create({
         data: {

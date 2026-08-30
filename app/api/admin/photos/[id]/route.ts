@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hasAdminSession } from "@/lib/admin-auth";
 import { ModerationStatus } from "@prisma/client";
 import { ScoreService } from "@/lib/score-service";
+import { BadgeService } from "@/lib/badge-service";
 
 export async function PATCH(
   request: NextRequest,
@@ -28,6 +29,7 @@ export async function PATCH(
   }
 
   let scoreAwarded = false;
+  let newlyUnlockedBadges: unknown[] = [];
   const updated = await prisma.$transaction(async (tx) => {
     const updatedPhoto = await tx.photo.update({
       where: { id },
@@ -41,10 +43,16 @@ export async function PATCH(
     if (moderationStatus === ModerationStatus.APPROVED) {
       const award = await ScoreService.processPhotoApproval(tx, photo.id, photo.userId);
       scoreAwarded = award.awarded;
+
+      const badgeAwards = await BadgeService.evaluatePhotoApproved(tx, photo.userId, {
+        photoId: photo.id,
+        isPhotoOfDay: photo.isPhotoOfDay || photo.isFeatured,
+      });
+      newlyUnlockedBadges = badgeAwards.map((b) => b.badge);
     }
 
     return updatedPhoto;
   });
 
-  return NextResponse.json({ photo: updated, scoreAwarded });
+  return NextResponse.json({ photo: updated, scoreAwarded, newlyUnlockedBadges });
 }

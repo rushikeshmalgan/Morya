@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import BottomNav from "@/components/shared/BottomNav";
 import { getStoredUser, BappaUser } from "@/lib/store";
 import Image from "next/image";
-import MushakAvatar from "@/components/mushak/MushakAvatar";
 import MushakEmptyState from "@/components/mushak/MushakEmptyState";
 
 interface Visit {
@@ -20,13 +19,18 @@ interface Visit {
   };
 }
 
-interface Achievement {
-  achievement: {
-    name: string;
-    description: string;
-    icon: string;
-  };
-  unlockedAt: string;
+interface UserBadgeProgress {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  rarity: string;
+  threshold: number | null;
+  currentProgress: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+  hidden: boolean;
 }
 
 interface ScoreTx {
@@ -39,7 +43,8 @@ interface ScoreTx {
 export default function JourneyPage() {
   const [user, setUser] = useState<BappaUser | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [badges, setBadges] = useState<UserBadgeProgress[]>([]);
+  const [badgeCategory, setBadgeCategory] = useState<string>("ALL");
   const [scoreHistory, setScoreHistory] = useState<ScoreTx[]>([]);
   const [activeTab, setActiveTab] = useState<"pandals" | "achievements" | "score">("pandals");
   const [isLoading, setIsLoading] = useState(true);
@@ -54,19 +59,19 @@ export default function JourneyPage() {
   const fetchJourney = async (token: string) => {
     setIsLoading(true);
     try {
-      const [visitsRes, userRes, scoreRes] = await Promise.all([
+      const [visitsRes, scoreRes, badgesRes] = await Promise.all([
         fetch("/api/visits", { headers: { "x-session-token": token } }),
-        fetch("/api/user", { headers: { "x-session-token": token } }),
         fetch("/api/score", { headers: { "x-session-token": token } }),
+        fetch("/api/me/badges", { headers: { "x-session-token": token } }),
       ]);
       const visitsData = await visitsRes.json();
-      const userData = await userRes.json();
       const scoreData = await scoreRes.json();
+      const badgesData = await badgesRes.json();
       setVisits(visitsData.visits || []);
-      setAchievements(userData.achievements || []);
       setScoreHistory(scoreData.history || []);
+      setBadges(badgesData.allBadges || []);
     } catch {
-      // Error
+      // Ignore
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +91,8 @@ export default function JourneyPage() {
       alert("Copied journey card to clipboard! Share with your friends 🐘");
     }
   };
+
+  const earnedBadgesCount = badges.filter((b) => b.unlocked).length;
 
   return (
     <div className="min-h-screen mandala-bg pb-24 safe-top safe-bottom">
@@ -109,38 +116,37 @@ export default function JourneyPage() {
               🐘
             </motion.div>
             <span className="text-[11px] font-extrabold uppercase tracking-widest" style={{ color: "var(--saffron-dark)" }}>
-              COLLECTOR IDENTITY
+              EXPLORER PROFILE
             </span>
-            <h1 className="font-display font-bold text-2xl mt-0.5" style={{ color: "var(--warm-brown)" }}>
-              {user.generatedName.toUpperCase()}
-            </h1>
-            <p className="text-xs font-semibold mt-1" style={{ color: "var(--muted-brown)" }}>
-              #{user.generatedNumber} • 📍 {user.city || "Festival Explorer"}
+            <h2 className="font-display font-black text-2xl mt-0.5 mb-1 text-slate-900">
+              {user.generatedName} #{user.generatedNumber}
+            </h2>
+            <p className="text-xs font-semibold mb-4 text-slate-500">
+              📍 {user.city || "Maharashtra"}
             </p>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-2 mt-5">
+            <div className="grid grid-cols-3 gap-2">
               <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
-                <p className="font-display font-bold text-2xl" style={{ color: "var(--saffron-dark)" }}>
+                <p className="font-display font-bold text-2xl text-amber-700">
                   {user.uniquePandals}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Pandals
                 </p>
               </div>
               <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
-                <p className="font-display font-bold text-2xl" style={{ color: "var(--muted-gold-dark)" }}>
+                <p className="font-display font-bold text-2xl text-amber-700">
                   {user.score}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Score XP
                 </p>
               </div>
               <div className="p-3 rounded-2xl bg-white/80 border border-amber-900/10 text-center">
-                <p className="font-display font-bold text-2xl" style={{ color: "var(--success)" }}>
-                  {achievements.length}
+                <p className="font-display font-bold text-2xl text-amber-700">
+                  {earnedBadgesCount}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted-brown)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Badges
                 </p>
               </div>
@@ -173,7 +179,7 @@ export default function JourneyPage() {
                 : { color: "var(--muted-brown)" }
             }
           >
-            🐘 MY COLLECTION ({visits.length})
+            🐘 COLLECTION ({visits.length})
           </button>
           <button
             id="tab-achievements"
@@ -189,7 +195,7 @@ export default function JourneyPage() {
                 : { color: "var(--muted-brown)" }
             }
           >
-            🏆 BADGES ({achievements.length})
+            🏆 BADGES ({earnedBadgesCount}/{badges.length})
           </button>
           <button
             id="tab-score"
@@ -209,7 +215,7 @@ export default function JourneyPage() {
           </button>
         </div>
 
-        {/* Content */}
+        {/* Collection Tab */}
         {activeTab === "pandals" && (
           <div>
             {isLoading ? (
@@ -225,7 +231,7 @@ export default function JourneyPage() {
                   title="Your Bappa Album is Empty"
                   description="Head to the map, discover pandals around your city, and add them to your darshan collection!"
                   actionText="🗺️ EXPLORE THE MAP"
-                  onAction={() => window.location.href = "/map"}
+                  onAction={() => (window.location.href = "/map")}
                 />
               </div>
             ) : (
@@ -257,7 +263,9 @@ export default function JourneyPage() {
                           {visit.pandal.name}
                         </h3>
                         {visit.pandal.isRare && (
-                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1 rounded font-bold">RARE</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-extrabold border border-amber-300">
+                            RARE
+                          </span>
                         )}
                       </div>
                       <p className="text-xs text-slate-500 font-medium">
@@ -279,41 +287,120 @@ export default function JourneyPage() {
           </div>
         )}
 
-        {/* Achievements Tab */}
+        {/* Badges Collection Tab */}
         {activeTab === "achievements" && (
           <div>
-            {achievements.length === 0 ? (
+            {/* Category Filter Pills */}
+            <div className="flex gap-1.5 overflow-x-auto pb-3 mb-2 no-scrollbar">
+              {["ALL", "EXPLORATION", "PHOTOGRAPHY", "YATRA", "STREAK"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setBadgeCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-extrabold whitespace-nowrap transition-all ${
+                    badgeCategory === cat
+                      ? "bg-amber-500 text-white shadow-sm"
+                      : "bg-amber-100/60 text-amber-800 hover:bg-amber-200/60"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {badges.filter((b) => badgeCategory === "ALL" || b.category === badgeCategory).length === 0 ? (
               <div className="py-8">
                 <MushakEmptyState
                   mood="thinking"
-                  title="No Badges Unlocked Yet"
-                  description="Discover your first Bappa to unlock your first exploration badge!"
+                  title="No Badges Found"
+                  description="Explore different areas of the app to unlock badges in this category!"
                 />
               </div>
             ) : (
               <div className="space-y-3">
-                {achievements.map((ua, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="achievement-badge w-full"
-                  >
-                    <span className="text-3xl">{ua.achievement.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate" style={{ color: "var(--warm-brown)" }}>
-                        {ua.achievement.name}
-                      </p>
-                      <p className="text-xs" style={{ color: "var(--muted-brown)" }}>
-                        {ua.achievement.description}
-                      </p>
-                    </div>
-                    <div className="text-[10px] font-semibold" style={{ color: "var(--muted-brown)" }}>
-                      {new Date(ua.unlockedAt).toLocaleDateString("en-IN")}
-                    </div>
-                  </motion.div>
-                ))}
+                {badges
+                  .filter((b) => badgeCategory === "ALL" || b.category === badgeCategory)
+                  .map((badge, i) => {
+                    const isUnlocked = badge.unlocked;
+                    const threshold = badge.threshold || 1;
+                    const progress = Math.min(badge.currentProgress || 0, threshold);
+                    const percent = Math.round((progress / threshold) * 100);
+
+                    return (
+                      <motion.div
+                        key={badge.key}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className={`p-3.5 rounded-2xl border flex items-start gap-3.5 transition-all ${
+                          isUnlocked
+                            ? "bg-gradient-to-r from-amber-50/90 to-orange-50/90 border-amber-300 shadow-sm"
+                            : "bg-slate-100/60 border-slate-200 opacity-75"
+                        }`}
+                      >
+                        {/* Icon */}
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                            isUnlocked
+                              ? "bg-amber-200/60 border border-amber-300 text-slate-900"
+                              : "bg-slate-200/80 border border-slate-300 grayscale opacity-60"
+                          }`}
+                        >
+                          {badge.icon}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <h4 className={`font-bold text-sm truncate ${isUnlocked ? "text-slate-900" : "text-slate-600"}`}>
+                              {badge.name}
+                            </h4>
+                            <span
+                              className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase ${
+                                badge.rarity === "LEGENDARY"
+                                  ? "bg-amber-100 text-amber-800 border-amber-300"
+                                  : badge.rarity === "EPIC"
+                                  ? "bg-purple-100 text-purple-800 border-purple-300"
+                                  : badge.rarity === "RARE"
+                                  ? "bg-blue-100 text-blue-800 border-blue-300"
+                                  : "bg-slate-100 text-slate-600 border-slate-200"
+                              }`}
+                            >
+                              {badge.rarity}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-500 mt-0.5 font-medium leading-tight">
+                            {badge.description}
+                          </p>
+
+                          {/* Progress Bar or Earned Date */}
+                          {isUnlocked ? (
+                            <p className="text-[10px] text-amber-700 font-bold mt-2 flex items-center gap-1">
+                              <span>✓ Earned</span>
+                              {badge.unlockedAt && (
+                                <span className="text-slate-400 font-normal">
+                                  • {new Date(badge.unlockedAt).toLocaleDateString("en-IN")}
+                                </span>
+                              )}
+                            </p>
+                          ) : (
+                            <div className="mt-2.5">
+                              <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold mb-1">
+                                <span>Progress</span>
+                                <span>{progress} / {threshold}</span>
+                              </div>
+                              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
               </div>
             )}
           </div>

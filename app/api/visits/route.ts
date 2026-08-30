@@ -13,6 +13,7 @@ import {
 } from "@/lib/achievements";
 import { parseCoordinate } from "@/lib/validation";
 import { ScoreService } from "@/lib/score-service";
+import { BadgeService } from "@/lib/badge-service";
 
 const CHECKIN_RADIUS = Number.parseInt(process.env.CHECKIN_RADIUS_METERS || "150", 10);
 
@@ -108,9 +109,10 @@ export async function POST(request: NextRequest) {
   let visit: { id: string; timestamp: Date };
   let updatedUser: { score: number; uniquePandals: number };
   let scoreAwards: { eventType: string; points: number; awarded: boolean }[] = [];
+  let newlyUnlockedBadges: { unlocked: boolean; badge: unknown }[] = [];
 
   try {
-    ({ visit, updatedUser, scoreAwards } = await prisma.$transaction(async (tx) => {
+    ({ visit, updatedUser, scoreAwards, newlyUnlockedBadges } = await prisma.$transaction(async (tx) => {
       const createdVisit = await tx.pandalVisit.create({
         data: {
           userId: user.id,
@@ -139,7 +141,7 @@ export async function POST(request: NextRequest) {
         visitTimestamp: createdVisit.timestamp,
       });
 
-      // Simple streak evaluation
+      // Streak evaluation
       const todayStr = createdVisit.timestamp.toISOString().split("T")[0];
       const streakAwards = await ScoreService.processStreakMilestone(
         tx,
@@ -148,10 +150,26 @@ export async function POST(request: NextRequest) {
         todayStr
       );
 
+      // Event-driven Badge evaluation
+      const unlockedPandalsBadges = await BadgeService.evaluatePandalDiscovered(tx, user.id, {
+        visitId: createdVisit.id,
+        pandalId,
+        isRare: pandal.isRare,
+        city: pandal.city,
+        totalUniquePandals: refreshedUser.uniquePandals,
+      });
+
+      const unlockedStreakBadges = await BadgeService.evaluateStreakUpdated(
+        tx,
+        user.id,
+        refreshedUser.uniquePandals
+      );
+
       return {
         visit: createdVisit,
         updatedUser: refreshedUser,
         scoreAwards: [...awards, ...streakAwards],
+        newlyUnlockedBadges: [...unlockedPandalsBadges, ...unlockedStreakBadges],
       };
     }));
   } catch (transactionError) {
@@ -219,6 +237,7 @@ export async function POST(request: NextRequest) {
     newScore: currentUser?.score ?? updatedUser.score,
     uniquePandals: currentUser?.uniquePandals ?? updatedUser.uniquePandals,
     newAchievements: [...new Set(newAchievements)],
+    newlyUnlockedBadges: (typeof newlyUnlockedBadges !== "undefined" ? newlyUnlockedBadges : []).map((b: { badge: unknown }) => b.badge),
     isDemoMode: demoEnabled,
   });
 }

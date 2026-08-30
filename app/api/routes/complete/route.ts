@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { ScoreService } from "@/lib/score-service";
+import { BadgeService } from "@/lib/badge-service";
 
 export async function POST(request: NextRequest) {
   const { user, error } = await requireSession(request);
@@ -65,6 +66,8 @@ export async function POST(request: NextRequest) {
     visitedPandalCount: visitedPandalIds.length,
   });
 
+  const newlyUnlockedBadges = await BadgeService.evaluateYatraCompleted(prisma, user.id, routeId);
+
   const currentUser = await prisma.anonymousUser.findUnique({
     where: { id: user.id },
     select: { score: true },
@@ -76,6 +79,7 @@ export async function POST(request: NextRequest) {
     awarded: awardResult.awarded,
     pointsAwarded: awardResult.points,
     newScore: currentUser?.score ?? 0,
+    newlyUnlockedBadges: newlyUnlockedBadges.map((b) => b.badge),
     message: awardResult.awarded
       ? "Darshan Yatra completed! +150 XP awarded."
       : "You have already claimed XP for completing this Darshan Yatra route.",

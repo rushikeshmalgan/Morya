@@ -1,6 +1,7 @@
 // Prisma Seed — 50 Ganpati Pandals across Pune, Mumbai, Nashik, Nagpur
 import { PrismaClient, PandalStatus, QuestType } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { BADGE_DEFINITIONS } from "../lib/badge-config";
 
 const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || "file:./dev.db" });
 const prisma = new PrismaClient({ adapter });
@@ -633,20 +634,13 @@ const PANDALS = [
 ];
 
 const ACHIEVEMENTS = [
-  { key: "first_darshan", name: "First Darshan", description: "Discovered your first Ganpati pandal", icon: "🐘", threshold: 1, points: 10 },
-  { key: "pandal_5", name: "Panchami Explorer", description: "Discovered 5 unique pandals", icon: "📍", threshold: 5, points: 25 },
-  { key: "pandal_10", name: "Dashami Devotee", description: "Discovered 10 unique pandals", icon: "🔥", threshold: 10, points: 50 },
-  { key: "pandal_25", name: "Pandal Hunter", description: "Discovered 25 unique pandals", icon: "🗺️", threshold: 25, points: 100 },
-  { key: "pandal_50", name: "Bappa Legend", description: "Discovered 50 unique pandals", icon: "👑", threshold: 50, points: 250 },
-  { key: "pandal_pioneer", name: "Pandal Pioneer", description: "Submitted a new pandal that was approved", icon: "🌟", threshold: 1, points: 100 },
-  { key: "first_photo", name: "First Snapshot", description: "Captured your first Bappa moment", icon: "📸", threshold: 1, points: 10 },
-  { key: "rare_pandal", name: "Manacha Bhakt", description: "Discovered a rare or historic pandal", icon: "⭐", threshold: 1, points: 50 },
-  { key: "night_darshan", name: "Night Explorer", description: "Visited a pandal after 8 PM", icon: "🌙", threshold: 1, points: 20 },
-  { key: "squad_creator", name: "Squad Leader", description: "Created your first Bappa squad", icon: "👥", threshold: 1, points: 15 },
-  { key: "quest_complete_1", name: "Quest Seeker", description: "Completed your first quest", icon: "🎯", threshold: 1, points: 15 },
-  { key: "quest_complete_5", name: "Quest Master", description: "Completed 5 quests", icon: "🏆", threshold: 5, points: 50 },
-  { key: "photo_featured", name: "Lens Star", description: "Got a photo featured in Bappa Lens", icon: "✨", threshold: 1, points: 30 },
-  { key: "dhol_warrior", name: "Dhol Tasha Warrior", description: "Discovered 3 pandals in a single day", icon: "🥁", threshold: 3, points: 40 },
+  ...BADGE_DEFINITIONS,
+  // Legacy alias keys for backward compatibility
+  { key: "first_darshan", name: "First Darshan", description: "Discovered your first Ganpati pandal", icon: "🐘", category: "EXPLORATION", rarity: "COMMON", threshold: 1, points: 10, hidden: true, sortOrder: 99 },
+  { key: "pandal_5", name: "Panchami Explorer", description: "Discovered 5 unique pandals", icon: "📍", category: "EXPLORATION", rarity: "COMMON", threshold: 5, points: 25, hidden: true, sortOrder: 99 },
+  { key: "pandal_10", name: "Dashami Devotee", description: "Discovered 10 unique pandals", icon: "🔥", category: "EXPLORATION", rarity: "RARE", threshold: 10, points: 50, hidden: true, sortOrder: 99 },
+  { key: "pandal_25", name: "Pandal Hunter", description: "Discovered 25 unique pandals", icon: "🗺️", category: "EXPLORATION", rarity: "EPIC", threshold: 25, points: 100, hidden: true, sortOrder: 99 },
+  { key: "rare_pandal", name: "Manacha Bhakt", description: "Discovered a rare or historic pandal", icon: "⭐", category: "EXPLORATION", rarity: "LEGENDARY", threshold: 1, points: 50, hidden: true, sortOrder: 99 },
 ];
 
 // Quests — active for the current festival
@@ -724,6 +718,7 @@ async function main() {
   await prisma.quest.deleteMany();
   await prisma.achievement.deleteMany();
   await prisma.pandal.deleteMany();
+  await prisma.scoreTransaction.deleteMany();
   await prisma.anonymousUser.deleteMany();
 
   // Seed pandals

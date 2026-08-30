@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import ts-node/register --test tests/score.test.ts",
+    "test": "npx tsx --test --test-concurrency=1 tests/score.test.ts tests/badge.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",

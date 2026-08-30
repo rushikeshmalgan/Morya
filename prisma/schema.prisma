@@ -240,11 +240,15 @@ model SquadMember {
 
 model Achievement {
   id          String  @id @default(cuid())
-  key         String  @unique // e.g. "first_darshan"
+  key         String  @unique // e.g. "FIRST_DARSHAN", "BAPPA_EXPLORER"
   name        String  // "First Darshan"
   description String
   icon        String  // emoji or icon name
-  threshold   Int?    // for count-based achievements
+  category    String  @default("EXPLORATION") // EXPLORATION, PHOTOGRAPHY, YATRA, STREAK, SPECIAL
+  rarity      String  @default("COMMON")      // COMMON, RARE, EPIC, LEGENDARY
+  threshold   Int?    // for count-based progress calculation
+  hidden      Boolean @default(false)
+  sortOrder   Int     @default(0)
   points      Int     @default(0)
 
   userAchievements UserAchievement[]
@@ -256,6 +260,7 @@ model UserAchievement {
   userId        String
   achievementId String
   unlockedAt    DateTime @default(now())
+  metadata      String?  // JSON context
 
   user        AnonymousUser @relation(fields: [userId], references: [id])
   achievement Achievement   @relation(fields: [achievementId], references: [id])
